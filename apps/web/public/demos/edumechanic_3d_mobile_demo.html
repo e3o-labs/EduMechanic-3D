@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>EduMechanic 3D - AI 3D 메커니즘 탐구 놀이터</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Three.js & OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Noto Sans KR -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Noto Sans KR', 'sans-serif'] },
+          colors: {
+            brand: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' },
+            mint: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#10b981', 600: '#059669' },
+            amber: { 50: '#fffbeb', 100: '#fef3c7', 500: '#f59e0b', 600: '#d97706' }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    
+    .drawer-transition {
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.5); border-radius: 6px; }
+    
+    @keyframes scanLine {
+      0% { top: 0%; opacity: 0.8; }
+      50% { opacity: 1; }
+      100% { top: 100%; opacity: 0.8; }
+    }
+    .scan-line {
+      position: absolute;
+      left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, transparent, #3b82f6, #10b981, transparent);
+      box-shadow: 0 0 12px #3b82f6;
+      animation: scanLine 2s infinite ease-in-out;
+    }
+
+    @keyframes softBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    .bounce-badge { animation: softBounce 2s infinite ease-in-out; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen w-screen overflow-hidden flex flex-col antialiased select-none">
+
+  <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-3 py-2 flex items-center justify-between shrink-0 z-20 shadow-sm">
+    <div class="flex items-center gap-2">
+      <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-sky-400 to-emerald-400 flex items-center justify-center text-white font-black text-lg shadow-md shadow-sky-200">
+        🤖
+      </div>
+      <div>
+        <div class="flex items-center gap-1.5">
+          <span class="font-extrabold text-xs text-slate-800 tracking-tight">EduMechanic 3D</span>
+          <span class="bg-sky-100 text-sky-700 border border-sky-200 text-[9px] font-bold px-2 py-0.5 rounded-full">초중고 STEM</span>
+        </div>
+        <p class="text-[10px] text-slate-500 font-medium">5학년 2반 모둠 B • 함께 탐구 모드</p>
+      </div>
+    </div>
+
+    <!-- Right Header Actions -->
+    <div class="flex items-center gap-1.5">
+      <button onclick="openPresetModal()" class="bg-sky-50 active:bg-sky-100 text-sky-700 text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 border border-sky-200 font-bold shadow-sm transition-all active:scale-95">
+        <i class="fa-solid fa-camera text-sky-500 text-xs"></i>
+        <span class="text-[11px] hidden sm:inline">사진 찍기/선택</span>
+        <span class="text-[11px] sm:hidden">사진</span>
+      </button>
+
+      <button onclick="triggerRemix()" class="bg-emerald-500 active:bg-emerald-600 text-white text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1 shadow-md shadow-emerald-200 font-bold transition-all active:scale-95">
+        <i class="fa-solid fa-bookmark text-[10px]"></i>
+        <span class="text-[11px]">내 탐구장에 담기</span>
+        <span id="remixBadge" class="bg-emerald-700 text-emerald-100 text-[9px] px-1.5 rounded-full ml-0.5 font-mono">3</span>
+      </button>
+
+      <button onclick="openPortfolioModal()" class="bg-amber-100 active:bg-amber-200 text-amber-800 w-8 h-8 rounded-xl flex items-center justify-center border border-amber-200 shadow-sm font-bold active:scale-95 transition-all">
+        <i class="fa-solid fa-trophy text-xs"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="flex-1 relative overflow-hidden flex flex-col md:flex-row">
+
+    <!-- 3D VIEWPORT CANVAS CONTAINER -->
+    <div class="relative w-full h-full flex-1 bg-sky-50/50 overflow-hidden">
+      
+      <!-- Three.js Canvas Root -->
+      <div id="canvas3d" class="w-full h-full cursor-grab active:cursor-grabbing"></div>
+
+      <!-- AI SCANNING ANIMATION OVERLAY -->
+      <div id="scanningOverlay" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-center pointer-events-none opacity-0 transition-opacity duration-300 z-30">
+        <div class="relative w-48 h-48 border-2 border-dashed border-emerald-400 rounded-3xl flex items-center justify-center p-2 mb-3 bg-white/90 shadow-2xl">
+          <img id="scanningThumb" src="" alt="Sample" class="w-full h-full object-cover rounded-2xl opacity-80">
+          <div class="scan-line"></div>
+          <div class="absolute top-2 left-2 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+            🤖 AI 메카몽이 구조 탐구 중...
+          </div>
+        </div>
+        <p id="scanProgressText" class="text-xs text-emerald-300 font-bold animate-pulse bg-slate-900/80 px-3 py-1 rounded-full border border-emerald-500/30">
+          내부 톱니와 결합 구조를 풀어내는 중! (85%)
+        </p>
+      </div>
+
+      <!-- CANVAS HUD TOP BAR -->
+      <div class="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10">
+        <div class="pointer-events-auto bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-2xl px-3 py-1.5 flex items-center gap-2 shadow-md">
+          <div id="presetIcon" class="w-7 h-7 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-pencil"></i>
+          </div>
+          <div>
+            <h2 id="presetTitle" class="text-xs font-black text-slate-800">수동 연필깎이 메커니즘</h2>
+            <p id="presetSubtitle" class="text-[10px] text-slate-500 font-medium">직각 기어 & 나선형 칼날 구조</p>
+          </div>
+        </div>
+
+        <!-- Camera Controls -->
+        <div class="pointer-events-auto flex items-center gap-1 bg-white/90 backdrop-blur-md border border-slate-200/80 p-1 rounded-2xl shadow-md">
+          <button onclick="resetCamera('iso')" class="w-7 h-7 text-[10px] bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-600 rounded-xl flex items-center justify-center font-bold transition-colors" title="입체뷰">ISO</button>
+          <button onclick="resetCamera('top')" class="w-7 h-7 text-[10px] bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-600 rounded-xl flex items-center justify-center font-bold transition-colors" title="정면뷰">TOP</button>
+          <button onclick="toggleXray()" id="xrayBtn" class="w-7 h-7 text-xs bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-600 rounded-xl flex items-center justify-center transition-colors" title="속 들여다보기">
+            <i class="fa-solid fa-cube"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="absolute bottom-4 left-3 right-3 pointer-events-none flex flex-col gap-2 z-10">
+        
+        <!-- Part Selected Quick Inspector Alert -->
+        <div id="partQuickInspector" class="pointer-events-auto hidden bg-sky-600/95 backdrop-blur-md border border-sky-400 text-white rounded-2xl p-2.5 text-xs shadow-xl animate-fade-in flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-2.5 h-2.5 rounded-full bg-amber-300 animate-ping"></div>
+            <div>
+              <span class="text-[10px] text-sky-100 font-bold block">선택한 부품</span>
+              <span id="selectedPartName" class="font-extrabold text-white text-xs">중앙 경사 베벨 기어</span>
+            </div>
+          </div>
+          <button onclick="switchTab('tab-inspect')" class="bg-white text-sky-700 text-[10px] font-black px-3 py-1.5 rounded-xl active:scale-95 transition-transform shadow-sm">
+            🔍 돋보기 보기 <i class="fa-solid fa-chevron-right ml-0.5"></i>
+          </button>
+        </div>
+
+        <!-- Main Touch Toolbar -->
+        <div class="pointer-events-auto bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-3xl p-3 shadow-xl flex flex-col gap-2">
+          <!-- Explode Slider -->
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] font-bold text-slate-600 shrink-0 flex items-center gap-1">
+              <i class="fa-solid fa-arrows-split-up-and-left text-sky-500"></i> 부품 펼쳐보기
+            </span>
+            <input type="range" id="explodeSlider" min="0" max="100" value="0" oninput="onExplodeChange(this.value)" class="w-full accent-sky-500 h-2 bg-slate-200 rounded-lg cursor-pointer">
+            <span id="explodeVal" class="text-[11px] font-mono text-sky-600 font-black w-8 text-right">0%</span>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+            <button id="simBtn" onclick="toggleSimulation()" class="flex-1 bg-emerald-50 active:bg-emerald-100 border border-emerald-200 text-emerald-700 text-xs py-2 rounded-2xl font-black flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all">
+              <i class="fa-solid fa-play text-xs text-emerald-500"></i>
+              <span id="simBtnText">스위치 온! 움직여보기</span>
+            </button>
+
+            <button onclick="addPinMode()" id="pinAddBtn" class="flex-1 bg-sky-50 active:bg-sky-100 border border-sky-200 text-sky-700 text-xs py-2 rounded-2xl font-black flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all">
+              <i class="fa-solid fa-location-dot text-xs text-sky-500"></i>
+              <span>질문 핀 찌르기</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="drawerPanel" class="w-full md:w-80 lg:w-96 bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col shrink-0 h-[48vh] md:h-full z-20 shadow-lg">
+      
+      <!-- PANEL TAB HEADERS -->
+      <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-2 py-2 shrink-0 overflow-x-auto">
+        <button onclick="switchTab('tab-inspect')" id="nav-tab-inspect" class="tab-btn active text-[11px] font-black px-3 py-1.5 rounded-xl transition-all text-sky-700 bg-sky-100 border border-sky-200 flex items-center gap-1 shrink-0">
+          🔍 부품과 원리
+        </button>
+        <button onclick="switchTab('tab-team')" id="nav-tab-team" class="tab-btn text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all text-slate-500 hover:text-slate-800 flex items-center gap-1 shrink-0">
+          💬 함께 탐구하기
+          <span class="bg-sky-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold">4</span>
+        </button>
+        <button onclick="switchTab('tab-quiz')" id="nav-tab-quiz" class="tab-btn text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all text-slate-500 hover:text-slate-800 flex items-center gap-1 shrink-0">
+          🧩 AI 탐구 퀴즈
+        </button>
+      </div>
+
+      <!-- TAB CONTENT SCROLL CONTAINER -->
+      <div class="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50/50">
+
+        <div id="tab-inspect" class="tab-content space-y-3">
+          
+          <!-- AI Analysis Summary Card -->
+          <div class="bg-white border-2 border-sky-100 rounded-3xl p-3.5 space-y-2 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-black text-sky-600 flex items-center gap-1">
+                🤖 AI 튜터 메카몽의 발견
+              </span>
+              <span class="text-[10px] bg-sky-50 text-sky-700 font-bold px-2 py-0.5 rounded-full border border-sky-100">
+                정확도 98.4%
+              </span>
+            </div>
+            <p id="aiSummaryText" class="text-xs text-slate-700 leading-relaxed font-medium">
+              이 기계는 손잡이를 돌리는 **회전 운동**을 직각 기어로 전달해서, 칼날이 빙글빙글 돌아 연필을 예쁘게 깎아주는 원리예요!
+            </p>
+          </div>
+
+          <!-- STEM Physical Principles Breakdown -->
+          <div class="bg-white border-2 border-emerald-100 rounded-3xl p-3.5 space-y-2 shadow-sm">
+            <h3 class="text-xs font-black text-slate-800 flex items-center gap-1.5">
+              💡 기계 속 신기한 과학 원리
+            </h3>
+            
+            <div id="stemPrinciplesList" class="space-y-2 text-xs">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Active Part Spec Box -->
+          <div class="bg-gradient-to-br from-sky-50 to-emerald-50 border-2 border-sky-200 rounded-3xl p-3.5 space-y-2 shadow-sm">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-black text-sky-800 flex items-center gap-1">
+                🔍 부품 돋보기 보기
+              </h4>
+              <span id="partTypeBadge" class="text-[9px] bg-sky-200 text-sky-800 font-bold px-2 py-0.5 rounded-full">
+                회전 톱니바퀴
+              </span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-2 text-[11px]">
+              <div class="bg-white p-2 rounded-2xl border border-sky-100 shadow-2xs">
+                <span class="text-[10px] text-slate-400 block font-bold">부품 이름</span>
+                <span id="inspectPartName" class="font-extrabold text-slate-800">중앙 베벨 기어</span>
+              </div>
+              <div class="bg-white p-2 rounded-2xl border border-sky-100 shadow-2xs">
+                <span class="text-[10px] text-slate-400 block font-bold">하는 일</span>
+                <span id="inspectPartFunction" class="font-extrabold text-emerald-600">돌아가는 방향 90도 변환</span>
+              </div>
+            </div>
+
+            <p id="inspectPartDesc" class="text-[11px] text-slate-600 leading-normal bg-white/80 p-2.5 rounded-2xl border border-sky-100">
+              손잡이와 연결되어 돌리는 힘을 칼날 축으로 90도 직각으로 꺾어 전달해주는 핵심 기어예요!
+            </p>
+          </div>
+
+        </div>
+
+        <div id="tab-team" class="tab-content hidden space-y-3">
+          <div class="flex items-center justify-between bg-white p-2.5 rounded-2xl border border-slate-200">
+            <h3 class="text-xs font-black text-slate-800 flex items-center gap-1.5">
+              💬 5학년 2반 모둠 B 실시간 대화
+            </h3>
+            <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">4명 참여 중</span>
+          </div>
+
+          <div id="teamCommentsList" class="space-y-2 text-xs">
+            <!-- Simulated Live Comments -->
+          </div>
+
+          <div class="pt-2 border-t border-slate-200 flex gap-1.5">
+            <input type="text" id="newCommentInput" placeholder="3D 부품에 궁금한 점을 질문해보세요..." class="flex-1 bg-white border border-slate-300 text-xs text-slate-800 rounded-2xl px-3 py-2.5 focus:outline-none focus:border-sky-500 shadow-2xs">
+            <button onclick="postComment()" class="bg-sky-500 active:bg-sky-600 text-white text-xs px-3.5 py-2.5 rounded-2xl font-black shadow-sm transition-all active:scale-95">
+              등록
+            </button>
+          </div>
+        </div>
+
+        <div id="tab-quiz" class="tab-content hidden space-y-3">
+          
+          <div class="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-3xl p-3.5 space-y-2.5 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-black text-amber-800 flex items-center gap-1">
+                🧩 AI 수수께끼 탐구 퀴즈
+              </span>
+              <span class="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-bold">난이도: ★☆☆</span>
+            </div>
+
+            <p id="quizQuestion" class="text-xs font-bold text-slate-800 leading-snug">
+              "연필깎이 손잡이를 2바퀴 돌릴 때 칼날이 6바퀴 돌았어요! 칼날은 손잡이보다 몇 배 더 빠를까요?"
+            </p>
+
+            <div id="quizOptions" class="space-y-1.5">
+              <!-- Dynamically rendered options -->
+            </div>
+
+            <div id="quizFeedback" class="hidden p-3 rounded-2xl text-xs leading-normal font-bold"></div>
+          </div>
+
+          <div class="bg-white border-2 border-slate-200 rounded-3xl p-3.5 space-y-2 shadow-sm">
+            <h4 class="text-xs font-black text-slate-800 flex items-center justify-between">
+              <span>🏆 나만의 3D 과학 탐구 카드</span>
+              <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">완성됨</span>
+            </h4>
+            <p class="text-[11px] text-slate-600 font-medium">
+              오늘 탐구한 3D 기계와 질문 메모가 모아져 학교 제출용 탐구 배지 카드로 모였어요.
+            </p>
+            <button onclick="openPortfolioModal()" class="w-full bg-emerald-500 active:bg-emerald-600 text-white text-xs font-black py-2.5 rounded-2xl flex items-center justify-center gap-1.5 shadow-md transition-all active:scale-95">
+              🏆 탐구 배지 카드 확인 & 선생님께 제출
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- PRESET PHOTO SELECTOR MODAL -->
+  <div id="presetModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="bg-white border border-slate-200 w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl text-slate-800">
+      
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+        <div>
+          <h3 class="text-sm font-black text-slate-800 flex items-center gap-1.5">
+            📸 궁금한 기계 사진 찍기 / 고르기
+          </h3>
+          <p class="text-[11px] text-slate-500 font-medium">주변 기계 사진을 찍으면 AI가 속을 보여줘요!</p>
+        </div>
+        <button onclick="closePresetModal()" class="w-8 h-8 text-slate-400 hover:text-slate-700 flex items-center justify-center rounded-full bg-slate-100">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <label class="border-2 border-dashed border-sky-400 hover:border-sky-500 bg-sky-50/50 rounded-3xl p-4 flex flex-col items-center justify-center cursor-pointer transition-colors text-center">
+        <div class="w-12 h-12 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center text-xl mb-1">
+          📸
+        </div>
+        <span class="text-xs font-black text-sky-700">카메라로 사진 찍기 또는 파일 선택</span>
+        <span class="text-[10px] text-slate-500 mt-0.5">AI 메카몽이 3D 메커니즘을 자동 유추합니다</span>
+        <input type="file" accept="image/*" class="hidden" onchange="handleFileUpload(event)">
+      </label>
+
+      <div>
+        <span class="text-[11px] font-black text-slate-400 uppercase tracking-wider block mb-2">추천 탐구 기계 예시</span>
+        <div class="grid grid-cols-2 gap-2" id="presetGrid"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PORTFOLIO SHARE MODAL -->
+  <div id="portfolioModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="bg-white border border-slate-200 w-full max-w-sm rounded-3xl p-5 space-y-4 relative shadow-2xl text-slate-800">
+      
+      <button onclick="closePortfolioModal()" class="absolute top-4 right-4 w-7 h-7 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+
+      <div class="text-center space-y-1 pt-1">
+        <div class="inline-block bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-black px-3 py-1 rounded-full shadow-2xs">
+          🏆 3D 과학 탐구 배지 카드
+        </div>
+        <h3 id="portTitle" class="text-base font-black text-slate-800">수동 연필깎이 역설계 메커니즘</h3>
+        <p class="text-[11px] text-slate-500 font-bold">탐구자: 5학년 2반 김민준 (모둠 B)</p>
+      </div>
+
+      <div class="bg-gradient-to-b from-sky-50 to-emerald-50 border-2 border-sky-100 rounded-2xl p-4 space-y-3 text-xs">
+        <div class="flex items-center justify-between text-[11px] text-slate-500 border-b border-sky-200/60 pb-2 font-medium">
+          <span>날짜: 2026.08.06</span>
+          <span class="text-sky-600 font-black">담기 3회 연계</span>
+        </div>
+        
+        <div class="space-y-1 text-[11px]">
+          <p class="text-slate-800 font-bold">💡 **내가 찾아낸 과학 비밀:**</p>
+          <p id="portPrinciple" class="text-slate-700 bg-white p-2.5 rounded-xl border border-sky-100 font-medium">
+            돌아가는 방향을 90도 직각으로 바꿔주는 베벨 기어 시스템
+          </p>
+        </div>
+
+        <div class="flex items-center justify-between pt-1">
+          <div class="flex items-center gap-1.5 text-[11px] text-emerald-600 font-black">
+            <i class="fa-solid fa-circle-check"></i> AI 분석 & 3D 검증 완료
+          </div>
+          <div class="w-9 h-9 bg-white p-1 rounded-xl border border-slate-200 flex items-center justify-center shadow-2xs">
+            <i class="fa-solid fa-qrcode text-slate-800 text-2xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="alert('포트폴리오가 PDF로 다운로드되었습니다!')" class="flex-1 bg-emerald-500 active:bg-emerald-600 text-white text-xs font-black py-2.5 rounded-2xl flex items-center justify-center gap-1 shadow-sm transition-all active:scale-95">
+          <i class="fa-solid fa-download"></i> PDF 저장
+        </button>
+        <button onclick="alert('링크가 클립보드에 복사되었습니다. 선생님이나 친구들에게 공유하세요!')" class="flex-1 bg-sky-500 active:bg-sky-600 text-white text-xs font-black py-2.5 rounded-2xl flex items-center justify-center gap-1 shadow-sm transition-all active:scale-95">
+          <i class="fa-solid fa-link"></i> 링크 공유
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <script>
+    const MECHANICAL_PRESETS = [
+      {
+        id: 'sharpener',
+        title: '수동 연필깎이 메커니즘',
+        subtitle: '직각 기어 & 나선형 칼날 구조',
+        icon: 'fa-pencil',
+        thumb: 'https://images.unsplash.com/photo-1585336261026-8f5786372969?auto=format&fit=crop&w=300&q=80',
+        aiSummary: '손잡이를 돌리면 **베벨 기어**가 힘을 90도로 꺾어주고, 나선형 칼날이 회전하면서 연필을 일정 각도로 예쁘게 깎아주는 구조예요!',
+        principles: [
+          { title: '돌아가는 방향 90도 전환', desc: '베벨 기어(Bevel Gear)를 이용해 손잡이와 칼날 축의 회전 방향을 직각으로 교차시킵니다.' },
+          { title: '힘을 키우는 기어비', desc: '손잡이를 1바퀴 돌릴 때 칼날이 더 힘차게 돌 수 있도록 톱니 수 비율을 설계했습니다.' }
+        ],
+        parts: [
+          { id: 'housing', name: '외부 투명 케이스', function: '내부 보호 및 연필 안내', desc: '내부 톱니바퀴가 어떻게 돌아가는지 훤히 들여다볼 수 있는 아크릴 케이스예요.' },
+          { id: 'bevel', name: '중앙 경사 베벨 기어', function: '회전 방향 90도 전환', desc: '손잡이와 만나 돌아가는 힘을 90도 직각으로 꺾어주는 톱니바퀴예요.' },
+          { id: 'cutter', name: '나선형 칼날 컷터', function: '연필 나무 깎아내기', desc: '경사각을 이루며 회전하여 연필 심이 부러지지 않게 깎아줍니다.' },
+          { id: 'crank', name: '손잡이 레버', function: '사람의 힘 입력', desc: '손으로 잡고 크게 원을 그리며 돌려 힘을 전달하는 레버예요.' }
+        ],
+        comments: [
+          { author: '김민준', time: '10분 전', text: '베벨 기어 톱니가 45도로 깎여 있어서 90도로 힘이 꺾이는 게 신기해!', part: '중앙 경사 베벨 기어' },
+          { author: '🤖 AI 메카몽', time: '8분 전', text: '정답이에요! 두 기어의 깔때기 각도가 만나서 직각 전환을 만들어내요!', part: '중앙 경사 베벨 기어' },
+          { author: '이서연', time: '2분 전', text: '칼날이 일자가 아니라 꼬여있어서 연필이 안 부러지는구나!', part: '나선형 칼날 컷터' }
+        ],
+        quiz: {
+          q: '연필깎이 손잡이를 2바퀴 돌릴 때 칼날이 6바퀴 돌았습니다. 칼날은 손잡이보다 몇 배 더 빠를까요?',
+          options: ['2배 빠름', '3배 빠름', '6배 빠름', '똑같음'],
+          correct: 1,
+          explanation: '입력 2회전에 출력 6회전이므로 6 ÷ 2 = 3배 더 빠르게 돌아요! 속도가 빨라지는 대신 회전 힘은 감속됩니다.'
+        }
+      },
+      {
+        id: 'musicbox',
+        title: '태엽 오르골 메커니즘',
+        subtitle: '태엽 드럼 & 빗살 음판 구조',
+        icon: 'fa-music',
+        thumb: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80',
+        aiSummary: '태엽에 저장된 스프링 힘이 풀어지면서 솟아난 돌기들이 금속 빗살을 튕겨서 아름다운 멜로디 소리를 만들어내요!',
+        principles: [
+          { title: '태엽 스프링 에너지 저장', desc: '돌려 감아놓은 태엽이 풀어지면서 운동 에너지로 출력됩니다.' },
+          { title: '길이에 따른 소리의 높낮이', desc: '쇠 빗살의 길이가 길수록 낮은 음, 짧을수록 높은 음 소리가 납니다.' }
+        ],
+        parts: [
+          { id: 'spring', name: '메인 태엽 드럼', function: '에너지 저축 및 풀림', desc: '강철 태엽이 꼬이면서 힘을 모아두는 곳이에요.' },
+          { id: 'cylinder', name: '돌기 핀 드럼', function: '멜로디 악보 정보 저장', desc: '표면에 볼록한 핀들이 음악 악보처럼 박혀 있어요.' },
+          { id: 'comb', name: '금속 빗살 음판', function: '진동을 통한 소리 발생', desc: '길이가 다른 쇠 빗살들이 튕겨질 때 소리를 만듭니다.' },
+          { id: 'governor', name: '바람개비 감속기', function: '속도 일정하게 유지', desc: '공기 저항으로 오르골이 너무 빨리 풀리지 않게 막아줍니다.' }
+        ],
+        comments: [
+          { author: '박준형', time: '15분 전', text: '바람개비 같은 팬이 계속 도는 이유가 뭔지 알겠다!', part: '바람개비 감속기' }
+        ],
+        quiz: {
+          q: '오르골의 금속 빗살 중 가장 길고 두꺼운 빗살을 튕기면 어떤 소리가 날까요?',
+          options: ['가장 높은 소리', '가장 낮은 소리', '소리가 안 남', '중간 소리'],
+          correct: 1,
+          explanation: '길이가 길수록 천천히 진동하기 때문에 묵직하고 낮은 음(Low Pitch)이 나게 됩니다!'
+        }
+      },
+      {
+        id: 'bicycle',
+        title: '자전거 유성기어 변속기',
+        subtitle: '중심 기어 & 공전 기어 동력 조절',
+        icon: 'fa-bicycle',
+        thumb: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=300&q=80',
+        aiSummary: '태양 주위를 지구가 돌듯, 중심 기어 둘레를 유성 기어들이 돌면서 언덕길 힘과 평지 속도를 바꾸어 주는 변속 장치예요!',
+        principles: [
+          { title: '힘과 속도의 시소 관계', desc: '속도를 높이면 페달을 밝는 힘이 더 들고, 언덕에선 페달이 가벼워집니다.' },
+          { title: '유성 기어 구조', desc: '작은 공간 안에 여러 개의 기어가 물리며 큰 힘을 냅니다.' }
+        ],
+        parts: [
+          { id: 'sun', name: '중심 태양 기어', function: '중심 축 고정/구동', desc: '가운데 위치하여 다른 기어들의 중심축 역할을 합니다.' },
+          { id: 'planet', name: '유성 피니언 기어 (x3)', function: '공전 및 힘 분배', desc: '태양 기어 주위를 회전하며 동력을 넘겨줍니다.' },
+          { id: 'ring', name: '바깥 링 기어', function: '외곽 체결 및 출력', desc: '안쪽에 톱니가 새겨진 원형 링 기어예요.' }
+        ],
+        comments: [
+          { author: '최민서', time: '5분 전', text: '언덕 올라갈 때 페달 가벼워지는 비밀이 유성기어였구나!', part: '중심 태양 기어' }
+        ],
+        quiz: {
+          q: '자전거로 가파른 언덕을 올라갈 때는 어떤 상태로 변속해야 할까요?',
+          options: ['속도 최우선', '큰 힘(토크) 최우선', '기어 작동 멈춤', '반대로 회전'],
+          correct: 1,
+          explanation: '언덕에서는 바퀴를 미는 큰 힘(토크)이 필요하므로 기어비를 높여 페달 힘을 크게 만듭니다!'
+        }
+      }
+    ];
+
+    let activePreset = MECHANICAL_PRESETS[0];
+    let activeTab = 'tab-inspect';
+    let isSimulating = false;
+    let isXray = false;
+    let explodeValue = 0;
+    let selectedPartId = null;
+
+    let scene, camera, renderer, controls;
+    let partsGroup = null;
+    let meshList = [];
+    let animationFrameId = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initThreeJS();
+      renderPresetGrid();
+      loadPreset(activePreset.id);
+    });
+
+    function initThreeJS() {
+      const container = document.getElementById('canvas3d');
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xf0f9ff);
+
+      camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+      camera.position.set(25, 20, 30);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      container.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.maxPolarAngle = Math.PI / 2 + 0.1;
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+      scene.add(ambientLight);
+
+      const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.7);
+      dirLight1.position.set(20, 40, 20);
+      scene.add(dirLight1);
+
+      const dirLight2 = new THREE.DirectionalLight(0x38bdf8, 0.4);
+      dirLight2.position.set(-20, -10, -20);
+      scene.add(dirLight2);
+
+      const gridHelper = new THREE.GridHelper(60, 30, 0x94a3b8, 0xcbd5e1);
+      gridHelper.position.y = -8;
+      scene.add(gridHelper);
+
+      // Raycaster for Touch / Click Selection
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+
+      renderer.domElement.addEventListener('pointerdown', (e) => {
+        const rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / container.clientWidth) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / container.clientHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        if (!partsGroup) return;
+
+        const intersects = raycaster.intersectObjects(meshList, true);
+        if (intersects.length > 0) {
+          const hitMesh = intersects[0].object;
+          if (hitMesh.userData && hitMesh.userData.partId) {
+            selectPart(hitMesh.userData.partId);
+          }
+        }
+      });
+
+      window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      });
+
+      animateLoop();
+    }
+
+    function build3DMechanism(presetId) {
+      if (partsGroup) scene.remove(partsGroup);
+
+      partsGroup = new THREE.Group();
+      meshList = [];
+
+      const matMetal = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.7, roughness: 0.3 });
+      const matBronze = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.6, roughness: 0.3 });
+      const matIndigo = new THREE.MeshStandardMaterial({ color: 0x4f46e5, metalness: 0.4, roughness: 0.4 });
+      const matEmerald = new THREE.MeshStandardMaterial({ color: 0x10b981, metalness: 0.3, roughness: 0.5 });
+      const matGlass = new THREE.MeshPhysicalMaterial({ color: 0x38bdf8, transmission: 0.8, opacity: 0.5, transparent: true, roughness: 0.1 });
+
+      if (presetId === 'sharpener') {
+        const housingGeo = new THREE.CylinderGeometry(8, 8, 14, 24, 1, true);
+        const housingMesh = new THREE.Mesh(housingGeo, matGlass);
+        housingMesh.userData = { partId: 'housing', basePos: new THREE.Vector3(0, 0, 0), dir: new THREE.Vector3(0, 1, 0) };
+        partsGroup.add(housingMesh);
+        meshList.push(housingMesh);
+
+        const bevelGeo = new THREE.ConeGeometry(5, 3, 16);
+        const bevelMesh = new THREE.Mesh(bevelGeo, matBronze);
+        bevelMesh.position.set(0, 2, 0);
+        bevelMesh.rotation.x = Math.PI;
+        bevelMesh.userData = { partId: 'bevel', basePos: new THREE.Vector3(0, 2, 0), dir: new THREE.Vector3(1, 0.5, 0) };
+        partsGroup.add(bevelMesh);
+        meshList.push(bevelMesh);
+
+        const cutterGeo = new THREE.CylinderGeometry(2.5, 2.5, 10, 12);
+        const cutterMesh = new THREE.Mesh(cutterGeo, matIndigo);
+        cutterMesh.position.set(2.5, -2, 0);
+        cutterMesh.rotation.z = 0.2;
+        cutterMesh.userData = { partId: 'cutter', basePos: new THREE.Vector3(2.5, -2, 0), dir: new THREE.Vector3(1, -0.5, 0) };
+        partsGroup.add(cutterMesh);
+        meshList.push(cutterMesh);
+
+        const handleGroup = new THREE.Group();
+        const armGeo = new THREE.BoxGeometry(10, 1, 1.5);
+        const armMesh = new THREE.Mesh(armGeo, matMetal);
+        armMesh.position.set(5, 0, 0);
+        const knobGeo = new THREE.CylinderGeometry(1, 1, 4, 12);
+        const knobMesh = new THREE.Mesh(knobGeo, matEmerald);
+        knobMesh.position.set(10, 0, 2);
+        handleGroup.add(armMesh, knobMesh);
+        handleGroup.position.set(0, 7, 0);
+        handleGroup.userData = { partId: 'crank', basePos: new THREE.Vector3(0, 7, 0), dir: new THREE.Vector3(0, 1.5, 0) };
+        partsGroup.add(handleGroup);
+        meshList.push(armMesh, knobMesh);
+
+      } else if (presetId === 'musicbox') {
+        const springGeo = new THREE.CylinderGeometry(6, 6, 5, 20);
+        const springMesh = new THREE.Mesh(springGeo, matBronze);
+        springMesh.position.set(-8, 0, 0);
+        springMesh.userData = { partId: 'spring', basePos: new THREE.Vector3(-8, 0, 0), dir: new THREE.Vector3(-1, 0, 0) };
+        partsGroup.add(springMesh);
+        meshList.push(springMesh);
+
+        const cylGeo = new THREE.CylinderGeometry(4, 4, 16, 24);
+        const cylMesh = new THREE.Mesh(cylGeo, matIndigo);
+        cylMesh.rotation.z = Math.PI / 2;
+        cylMesh.position.set(3, 0, 0);
+        cylMesh.userData = { partId: 'cylinder', basePos: new THREE.Vector3(3, 0, 0), dir: new THREE.Vector3(0, 0, 1) };
+        partsGroup.add(cylMesh);
+        meshList.push(cylMesh);
+
+        const combGeo = new THREE.BoxGeometry(12, 1, 5);
+        const combMesh = new THREE.Mesh(combGeo, matMetal);
+        combMesh.position.set(3, 0, -5);
+        combMesh.userData = { partId: 'comb', basePos: new THREE.Vector3(3, 0, -5), dir: new THREE.Vector3(0, 0, -1) };
+        partsGroup.add(combMesh);
+        meshList.push(combMesh);
+
+        const govGeo = new THREE.BoxGeometry(4, 4, 0.5);
+        const govMesh = new THREE.Mesh(govGeo, matEmerald);
+        govMesh.position.set(13, 0, 0);
+        govMesh.userData = { partId: 'governor', basePos: new THREE.Vector3(13, 0, 0), dir: new THREE.Vector3(1, 0, 0) };
+        partsGroup.add(govMesh);
+        meshList.push(govMesh);
+
+      } else {
+        const sunGeo = new THREE.CylinderGeometry(3, 3, 4, 16);
+        const sunMesh = new THREE.Mesh(sunGeo, matBronze);
+        sunMesh.userData = { partId: 'sun', basePos: new THREE.Vector3(0, 0, 0), dir: new THREE.Vector3(0, 1, 0) };
+        partsGroup.add(sunMesh);
+        meshList.push(sunMesh);
+
+        const planetGroup = new THREE.Group();
+        for (let i = 0; i < 3; i++) {
+          const angle = (i * Math.PI * 2) / 3;
+          const pGeo = new THREE.CylinderGeometry(2, 2, 4, 12);
+          const pMesh = new THREE.Mesh(pGeo, matIndigo);
+          pMesh.position.set(Math.cos(angle) * 6, 0, Math.sin(angle) * 6);
+          planetGroup.add(pMesh);
+          meshList.push(pMesh);
+        }
+        planetGroup.userData = { partId: 'planet', basePos: new THREE.Vector3(0, 0, 0), dir: new THREE.Vector3(0, 0.5, 0) };
+        partsGroup.add(planetGroup);
+
+        const ringGeo = new THREE.TorusGeometry(10, 1.5, 8, 30);
+        const ringMesh = new THREE.Mesh(ringGeo, matMetal);
+        ringMesh.rotation.x = Math.PI / 2;
+        ringMesh.userData = { partId: 'ring', basePos: new THREE.Vector3(0, 0, 0), dir: new THREE.Vector3(0, -1, 0) };
+        partsGroup.add(ringMesh);
+        meshList.push(ringMesh);
+      }
+
+      scene.add(partsGroup);
+      updateExplode(explodeValue);
+    }
+
+    function animateLoop() {
+      animationFrameId = requestAnimationFrame(animateLoop);
+      controls.update();
+
+      if (isSimulating && partsGroup) {
+        partsGroup.children.forEach(obj => {
+          if (obj.userData && obj.userData.partId) {
+            const id = obj.userData.partId;
+            if (id === 'crank' || id === 'bevel') obj.rotation.y += 0.04;
+            if (id === 'cutter') obj.rotation.y -= 0.08;
+            if (id === 'cylinder' || id === 'spring') obj.rotation.x += 0.03;
+            if (id === 'planet') obj.rotation.y += 0.03;
+            if (id === 'governor') obj.rotation.z += 0.15;
+          }
+        });
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    function onExplodeChange(val) {
+      explodeValue = parseInt(val);
+      document.getElementById('explodeVal').innerText = `${explodeValue}%`;
+      updateExplode(explodeValue);
+    }
+
+    function updateExplode(percentage) {
+      if (!partsGroup) return;
+      const factor = (percentage / 100) * 12;
+
+      partsGroup.children.forEach(child => {
+        if (child.userData && child.userData.basePos && child.userData.dir) {
+          const base = child.userData.basePos;
+          const dir = child.userData.dir;
+          child.position.set(
+            base.x + dir.x * factor,
+            base.y + dir.y * factor,
+            base.z + dir.z * factor
+          );
+        }
+      });
+    }
+
+    function loadPreset(presetId) {
+      const found = MECHANICAL_PRESETS.find(p => p.id === presetId);
+      if (!found) return;
+
+      activePreset = found;
+
+      const overlay = document.getElementById('scanningOverlay');
+      document.getElementById('scanningThumb').src = activePreset.thumb;
+      overlay.classList.remove('opacity-0', 'pointer-events-none');
+
+      setTimeout(() => {
+        overlay.classList.add('opacity-0', 'pointer-events-none');
+        build3DMechanism(presetId);
+        updateUIElements();
+      }, 1200);
+    }
+
+    function updateUIElements() {
+      document.getElementById('presetTitle').innerText = activePreset.title;
+      document.getElementById('presetSubtitle').innerText = activePreset.subtitle;
+      document.getElementById('aiSummaryText').innerHTML = activePreset.aiSummary;
+      document.getElementById('presetIcon').innerHTML = `<i class="fa-solid ${activePreset.icon}"></i>`;
+
+      const princList = document.getElementById('stemPrinciplesList');
+      princList.innerHTML = activePreset.principles.map(p => `
+        <div class="bg-slate-50 p-2.5 rounded-2xl border border-emerald-100">
+          <span class="font-extrabold text-emerald-700 block mb-0.5">🔹 ${p.title}</span>
+          <span class="text-slate-600 text-[11px] font-medium">${p.desc}</span>
+        </div>
+      `).join('');
+
+      renderComments();
+      renderQuiz();
+
+      if (activePreset.parts.length > 0) {
+        selectPart(activePreset.parts[0].id);
+      }
+    }
+
+    function selectPart(partId) {
+      selectedPartId = partId;
+      const part = activePreset.parts.find(p => p.id === partId);
+      if (!part) return;
+
+      document.getElementById('partQuickInspector').classList.remove('hidden');
+      document.getElementById('selectedPartName').innerText = part.name;
+      document.getElementById('inspectPartName').innerText = part.name;
+      document.getElementById('inspectPartFunction').innerText = part.function;
+      document.getElementById('inspectPartDesc').innerText = part.desc;
+
+      if (partsGroup) {
+        meshList.forEach(m => {
+          if (m.material && m.material.emissive) {
+            if (m.userData.partId === partId) {
+              m.material.emissive.setHex(0x38bdf8);
+              m.material.emissiveIntensity = 0.6;
+            } else {
+              m.material.emissive.setHex(0x000000);
+            }
+          }
+        });
+      }
+    }
+
+    function switchTab(tabId) {
+      activeTab = tabId;
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('text-sky-700', 'bg-sky-100', 'border', 'border-sky-200');
+        btn.classList.add('text-slate-500');
+      });
+
+      const activeNav = document.getElementById(`nav-${tabId}`);
+      if (activeNav) {
+        activeNav.classList.remove('text-slate-500');
+        activeNav.classList.add('text-sky-700', 'bg-sky-100', 'border', 'border-sky-200');
+      }
+    }
+
+    function toggleSimulation() {
+      isSimulating = !isSimulating;
+      const btnText = document.getElementById('simBtnText');
+      const btn = document.getElementById('simBtn');
+
+      if (isSimulating) {
+        btnText.innerText = '동작 일시정지';
+        btn.classList.replace('bg-emerald-50', 'bg-emerald-500');
+        btn.classList.replace('text-emerald-700', 'text-white');
+      } else {
+        btnText.innerText = '스위치 온! 움직여보기';
+        btn.classList.replace('bg-emerald-500', 'bg-emerald-50');
+        btn.classList.replace('text-white', 'text-emerald-700');
+      }
+    }
+
+    function toggleXray() {
+      isXray = !isXray;
+      const btn = document.getElementById('xrayBtn');
+      
+      meshList.forEach(m => {
+        if (m.material) {
+          m.material.wireframe = isXray;
+        }
+      });
+
+      if (isXray) {
+        btn.classList.add('bg-sky-500', 'text-white');
+      } else {
+        btn.classList.remove('bg-sky-500', 'text-white');
+      }
+    }
+
+    function resetCamera(view) {
+      if (view === 'iso') {
+        camera.position.set(25, 20, 30);
+      } else if (view === 'top') {
+        camera.position.set(0, 40, 0.1);
+      }
+      controls.target.set(0, 0, 0);
+      controls.update();
+    }
+
+    function addPinMode() {
+      alert('📍 3D 화면의 원하는 부품을 터치하면 질문 핀을 찌를 수 있어요!');
+    }
+
+    function renderComments() {
+      const list = document.getElementById('teamCommentsList');
+      list.innerHTML = activePreset.comments.map(c => `
+        <div class="bg-white border border-slate-200 p-3 rounded-2xl space-y-1 shadow-2xs">
+          <div class="flex items-center justify-between text-[10px]">
+            <span class="font-extrabold text-sky-700">${c.author}</span>
+            <span class="text-slate-400 font-medium">${c.time}</span>
+          </div>
+          <span class="inline-block bg-sky-50 text-sky-700 border border-sky-100 text-[9px] px-2 py-0.2 rounded-full font-bold">
+            📍 ${c.part}
+          </span>
+          <p class="text-slate-700 text-xs font-medium">${c.text}</p>
+        </div>
+      `).join('');
+    }
+
+    function postComment() {
+      const input = document.getElementById('newCommentInput');
+      if (!input.value.trim()) return;
+
+      activePreset.comments.unshift({
+        author: '나 (김민준)',
+        time: '방금 전',
+        text: input.value,
+        part: selectedPartId ? activePreset.parts.find(p => p.id === selectedPartId).name : '전체 메커니즘'
+      });
+
+      input.value = '';
+      renderComments();
+    }
+
+    function renderQuiz() {
+      const q = activePreset.quiz;
+      document.getElementById('quizQuestion').innerText = `"${q.q}"`;
+
+      const optsBox = document.getElementById('quizOptions');
+      optsBox.innerHTML = q.options.map((opt, idx) => `
+        <button onclick="checkQuiz(${idx})" class="w-full text-left bg-white hover:bg-amber-100/50 border border-amber-200 text-xs text-slate-800 px-3.5 py-2.5 rounded-2xl flex items-center justify-between font-bold transition-all active:scale-98">
+          <span>${idx + 1}. ${opt}</span>
+          <i class="fa-regular fa-circle text-slate-400"></i>
+        </button>
+      `).join('');
+
+      document.getElementById('quizFeedback').classList.add('hidden');
+    }
+
+    function checkQuiz(selectedIndex) {
+      const q = activePreset.quiz;
+      const fb = document.getElementById('quizFeedback');
+      fb.classList.remove('hidden');
+
+      if (selectedIndex === q.correct) {
+        fb.className = 'p-3 rounded-2xl text-xs bg-emerald-100 border border-emerald-300 text-emerald-800 font-bold';
+        fb.innerHTML = `🎉 정답이에요! 아주 훌륭해요! <br><span class="font-medium text-[11px] text-emerald-900 block mt-1">${q.explanation}</span>`;
+      } else {
+        fb.className = 'p-3 rounded-2xl text-xs bg-rose-100 border border-rose-300 text-rose-800 font-bold';
+        fb.innerHTML = `💡 아쉬워요! 다시 생각해볼까요? <br><span class="font-medium text-[11px] text-rose-900 block mt-1">힌트: 입력 회전수와 칼날이 돈 회전수의 비율을 나눠보세요.</span>`;
+      }
+    }
+
+    function triggerRemix() {
+      const badge = document.getElementById('remixBadge');
+      let count = parseInt(badge.innerText);
+      badge.innerText = count + 1;
+
+      alert(`'${activePreset.title}' 메커니즘을 내 개인 탐구장에 담았습니다!\n나만의 부품을 추가하거나 자유롭게 개조해 보세요.`);
+    }
+
+    function renderPresetGrid() {
+      const grid = document.getElementById('presetGrid');
+      grid.innerHTML = MECHANICAL_PRESETS.map(p => `
+        <div onclick="selectPresetFromModal('${p.id}')" class="bg-white hover:bg-sky-50 border-2 border-slate-200 hover:border-sky-300 rounded-2xl p-2 cursor-pointer space-y-1.5 transition-all active:scale-95 shadow-2xs">
+          <div class="h-20 rounded-xl overflow-hidden relative">
+            <img src="${p.thumb}" class="w-full h-full object-cover">
+            <span class="absolute top-1 left-1 bg-white/90 text-sky-600 text-[9px] px-2 py-0.5 rounded-full font-bold shadow-2xs">
+              <i class="fa-solid ${p.icon}"></i>
+            </span>
+          </div>
+          <div>
+            <h4 class="text-xs font-black text-slate-800 leading-tight">${p.title}</h4>
+            <p class="text-[10px] text-slate-500 font-medium truncate">${p.subtitle}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openPresetModal() {
+      const modal = document.getElementById('presetModal');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function closePresetModal() {
+      const modal = document.getElementById('presetModal');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function selectPresetFromModal(id) {
+      closePresetModal();
+      loadPreset(id);
+    }
+
+    function handleFileUpload(e) {
+      if (e.target.files && e.target.files[0]) {
+        closePresetModal();
+        loadPreset('sharpener');
+      }
+    }
+
+    function openPortfolioModal() {
+      document.getElementById('portTitle').innerText = `${activePreset.title} 탐구 카드`;
+      document.getElementById('portPrinciple').innerText = activePreset.principles[0].title;
+      
+      const modal = document.getElementById('portfolioModal');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function closePortfolioModal() {
+      const modal = document.getElementById('portfolioModal');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+    }
+  </script>
+</body>
+</html>

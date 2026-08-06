@@ -29,7 +29,7 @@
 | --- | --- | --- | --- | --- | --- |
 | **Phase 1** | **3D Engine & Viewer Core / MVP** | 3D WebGL 캔버스, Zustand 상태, FastAPI 스켈레톤, CadQuery/VLM 스키마 하네스 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase1_mvp_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase1_mvp_construction.md) |
 | **Phase 2** | **AI Agent Pipeline & Data Reuse** | 1~4단계 AI 에이전트 파이프라인, Mech RAG, 데이터 재활용 캐싱 & LLM 비용 최적화 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase2_ai_pipeline_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase2_ai_pipeline_construction.md) |
-| **Phase 3** | **Real-Time Co-Create & Fork/Remix** | 모둠 실시간 3D Yjs 동기화, 탐구 카드 Fork/리믹스 생태계, 파스텔 Claymorphism UI | 🔄 예정 | - | *(완료 시 업데이트)* |
+| **Phase 3** | **Real-Time Co-Create & Fork/Remix** | 모둠 실시간 3D Yjs 동기화, 탐구 카드 Fork/리믹스 생태계, 파스텔 Claymorphism UI | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase3_cocreate_fork_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase3_cocreate_fork_construction.md) |
 | **Phase 4** | **Field Validation & Performance** | 태블릿 WebGL 60 FPS 최적화, 교실 현장 알파 테스트, 3D 수행평가 배지 리포트 PDF | 🔄 예정 | - | *(완료 시 업데이트)* |
 
 ---
@@ -70,14 +70,15 @@
 
 ---
 
-### Phase 3: Real-Time Co-Create & Fork/Remix Ecosystem (예정)
-- [ ] **Yjs + WebSockets (`y-websocket`) 실시간 동기화**
-  - [ ] 모둠원 간 3D 터치 핀 위치, 질문 메모, 카메라 시점 실시간 동기화
-  - [ ] 동시 접속자 마우스/터치 커서 시각화
-- [ ] **메커니즘 리믹스(Fork) 생태계 구축**
-  - [ ] 다른 유저의 3D 탐구 카드를 내 워크스페이스로 복제(Fork)하여 부품 변경 및 커스텀
-- [ ] **K-12 맞춤형 파스텔 톤앤매너 UI Polish 및 모바일 웹 PWA 대응**
-- 🔗 **상세 완료 이력 보기:** *(Phase 3 완료 후 워크쓰루 레포트 첨부 예정)*
+### Phase 3: Real-Time Co-Create & Fork/Remix Ecosystem - ✅ 완료 (2026-08-06)
+- [x] **Yjs + WebSockets (`y-websocket`) 실시간 동기화**
+  - [x] 모둠원 간 3D 터치 핀 위치, 질문 메모, 카메라 시점 실시간 CRDT 동기화 (`apps/web/src/hooks/useYjsSync.ts`)
+  - [x] Yjs WebSocket 하네스 목업 서버 구축 (`harness/mocks/yjs_websocket_server.js`)
+- [x] **메커니즘 리믹스(Fork) 생태계 구축**
+  - [x] 다른 유저의 3D 탐구 카드를 내 워크스페이스로 복제(Fork)하는 API 구축 (`POST /api/v1/cards/{id}/fork`)
+- [x] **K-12 맞춤형 PWA 및 UI Polish**
+  - [x] Web App PWA manifest (`apps/web/public/manifest.json`) 적용 및 Next.js 14 프로덕션 빌드 통과
+- 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-06_phase3_cocreate_fork_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase3_cocreate_fork_construction.md)
 
 ---
 

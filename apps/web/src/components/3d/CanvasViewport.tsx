@@ -43,7 +43,8 @@ export function CanvasViewport() {
         <Canvas
           camera={{ position: [25, 20, 30], fov: 45 }}
           shadows
-          gl={{ antialias: true, alpha: true }}
+          dpr={[1, 1.5]}
+          gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
         >
           <color attach="background" args={['#f0f9ff']} />
           <ambientLight intensity={0.85} />

@@ -55,7 +55,10 @@ export function PortfolioModal() {
 
         <div className="flex gap-2">
           <button
-            onClick={() => alert('포트폴리오가 PDF로 다운로드되었습니다!')}
+            onClick={() => {
+              const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+              window.open(`${backendUrl}/api/v1/cards/${activePreset.id}/pdf`, '_blank');
+            }}
             className="flex-1 bg-emerald-500 active:bg-emerald-600 text-white text-xs font-black py-2.5 rounded-2xl flex items-center justify-center gap-1 shadow-sm transition-all active:scale-95"
           >
             <Download className="w-3.5 h-3.5" /> PDF 저장

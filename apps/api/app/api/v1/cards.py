@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import uuid
+from app.services.pdf.exporter import pdf_exporter
 
 router = APIRouter()
 
@@ -37,6 +38,22 @@ async def fork_exploration_card(card_id: str):
     )
     cards_db[new_card_id] = forked_card
     return forked_card
+
+@router.get("/cards/{card_id}/pdf")
+async def export_card_pdf(card_id: str):
+    """
+    Exports printable PDF Science Badge Card report for the specified exploration card.
+    """
+    card_data = cards_db.get(card_id) or {
+        "title": f"3D 메커니즘 탐구 카드 ({card_id})",
+        "ai_summary": "베벨 기어 90도 직각 전력 전달 시스템 및 물리 구동 축 분석 결과입니다."
+    }
+    pdf_bytes = pdf_exporter.generate_badge_card_pdf(card_data)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=EduMechanic_Badge_{card_id}.pdf"}
+    )
 
 @router.get("/cards", response_model=List[ExplorationCardSchema])
 async def list_exploration_cards():

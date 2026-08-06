@@ -33,6 +33,7 @@
 | **Phase 4** | **Field Validation & Performance** | 태블릿 WebGL 60 FPS 최적화, 교실 현장 알파 테스트, 3D 수행평가 배지 리포트 PDF | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase4_field_validation_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase4_field_validation_construction.md) |
 | **Phase 5** | **Cloud Deployment & LMS Integration** | Docker Compose 프로덕션 인프라, Vercel 명세, Google Classroom LMS API 연동 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase5_cloud_lms_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase5_cloud_lms_construction.md) |
 | **Phase 6** | **WebXR AR Mode & 3D Printer Slicer** | WebXR 책상 증강현실 모드, Bambu/Cura 3D 프린터 3MF/STL 내보내기 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase6_ar_slicer_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase6_ar_slicer_construction.md) |
+| **Phase 7** | **Voice Tutor Mechamong & 3D Interaction** | AI 음성 하브루타 튜터 '메카몽' STT/TTS 및 3D 음성 연동 인터랙션 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase7_voice_tutor_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase7_voice_tutor_construction.md) |
 
 ---
 
@@ -115,4 +116,13 @@
 - 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-06_phase6_ar_slicer_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase6_ar_slicer_construction.md)
 
 ---
-*모든 마일스톤(Phase 1 ~ Phase 6) 구축이 성공적으로 완료되었습니다.*
+
+### Phase 7: Voice Tutor Mechamong & 3D Interaction - ✅ 완료 (2026-08-06)
+- [x] **AI Voice Habrutha Tutor Agent "Mechamong"**
+  - [x] 음성 대화 에이전트 서비스 (`apps/api/app/services/vlm/voice_tutor.py`) 및 `/api/v1/voice/ask` 엔드포인트 구축
+- [x] **Frontend Voice Interaction UI**
+  - [x] 3D HUD 마이크 Floating UI 버튼 (`apps/web/src/components/ui/VoiceTutorButton.tsx`) 및 3D 액션 연동
+- 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-06_phase7_voice_tutor_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase7_voice_tutor_construction.md)
+
+---
+*모든 마일스톤(Phase 1 ~ Phase 7) 구축이 성공적으로 완료되었습니다.*

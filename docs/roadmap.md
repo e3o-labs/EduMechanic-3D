@@ -5,14 +5,32 @@
 
 ---
 
+## 💡 핵심 워크플로우 & AI 에이전트 개발 전략
+
+```
+[1. 인지 (Vision)] ──► [2. 탐색/추론 (RAG)] ──► [3. 하이브리드 보정] ──► [4. 3D 파라메트릭 CAD 생성]
+ (VLM 객체 세그먼트)     (특허/매뉴얼/기존 DB)    (실측값 vs 근사치)      (CadQuery ➔ STEP/GLB)
+                                 ▲                                           │
+                                 └────────── [데이터 재활용 루프] ──────────────┘
+                                           (커뮤니티 DB 축적 ➔ Zero LLM 비용)
+```
+
+1. **Step 1 (Vision Perception Agent):** 사진 촬영 ➔ VLM 객체 세그먼테이션 및 기계 메커니즘 1차 라벨링.
+2. **Step 2 (Mech RAG & Knowledge Agent):** 기존 유저 축적 3D DB 및 특허/매뉴얼 Vector DB 우선 검색 (Cache First).
+3. **Step 3 (Hybrid Dimension Fixer):** 실측/특허 문서가 존재할 경우 **정밀 치수 매핑**, 없으면 **물리적 공학 근사치 추론**.
+4. **Step 4 (3D Parametric CAD & Edu Agent):** CadQuery 기반 정밀 3D CAD 스크립트 실행, FDM/SLA 공차 적용 및 하브루타 AI 퀴즈 카드 자동 발행.
+5. **Data Reuse & Token Cost Optimization:** 생성된 3D 탐구 카드는 DB/Vector Index에 저장되어, 향후 동일/유사 제품 조회 시 **LLM API 비용 0원(Cache hit)**으로 즉시 서빙.
+
+---
+
 ## 🎯 전체 마일스톤 이행 현황 (Overall Status)
 
-| Phase | 단계명 | 목표 개발 기간 | 상태 | 완료 날짜 | 상세 이력 문서 |
+| Phase | 단계명 | 핵심 AI 에이전트 & 연동 목표 | 상태 | 완료 날짜 | 상세 이력 문서 |
 | --- | --- | --- | --- | --- | --- |
-| **Phase 1** | **3D Engine & Viewer Core / MVP 구축** | 1~2주차 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase1_mvp_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase1_mvp_construction.md) |
-| **Phase 2** | **AI VLM & CAD Pipeline Integration** | 3~4주차 | 🔄 예정 | - | *(완료 시 업데이트)* |
-| **Phase 3** | **Real-time Collaboration & UI Polish** | 5~6주차 | 🔄 예정 | - | *(완료 시 업데이트)* |
-| **Phase 4** | **Field Testing & Optimization** | 7~8주차 | 🔄 예정 | - | *(완료 시 업데이트)* |
+| **Phase 1** | **3D Engine & Viewer Core / MVP** | 3D WebGL 캔버스, Zustand 상태, FastAPI 스켈레톤, CadQuery/VLM 스키마 하네스 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase1_mvp_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase1_mvp_construction.md) |
+| **Phase 2** | **AI Agent Pipeline & Data Reuse** | 1~4단계 AI 에이전트 파이프라인, Mech RAG, 데이터 재활용 캐싱 & LLM 비용 최적화 | 🔄 진행 중 | - | *(개발 중)* |
+| **Phase 3** | **Real-Time Co-Create & Fork/Remix** | 모둠 실시간 3D Yjs 동기화, 탐구 카드 Fork/리믹스 생태계, 파스텔 Claymorphism UI | 🔄 예정 | - | *(완료 시 업데이트)* |
+| **Phase 4** | **Field Validation & Performance** | 태블릿 WebGL 60 FPS 최적화, 교실 현장 알파 테스트, 3D 수행평가 배지 리포트 PDF | 🔄 예정 | - | *(완료 시 업데이트)* |
 
 ---
 
@@ -37,31 +55,33 @@
 
 ---
 
-### Phase 2: AI VLM & CAD Pipeline Integration (예정)
-- [ ] **Claude 3.5 Sonnet / Qwen2-VL 라이브 API 파이프라인 연동**
-  - [ ] 이미지 업로드 ➔ VLM 세그먼테이션 ➔ JSON 파싱 자동화
-- [ ] **Mech RAG (PostgreSQL pgvector) 특허/매뉴얼 검색 엔진 연결**
-  - [ ] 내부 비가시 영역 기어비 및 결합 구조 자동 유추 RAG 구축
-- [ ] **OpenCASCADE NURBS STEP ➔ GLB 실시간 변환 파이프라인**
-  - [ ] CadQuery 연산 결과물의 웹 표준 GLB 압축 및 S3 저장 연동
-- [ ] **자가 치유(Self-Healing) 오류 복구 백엔드 루프 구축**
-  - [ ] Geometry 연산 에러 발생 시 Traceback을 AI로 재전달하여 2~3회 자동 재시도
+### Phase 2: AI Agent Pipeline & Data Reuse Loop (현재 진행 단계)
+- [ ] **Step 1: Vision Perception Agent 구축**
+  - [ ] Claude 3.5 Sonnet / Qwen2-VL 기반 사진 내 부품 분할 및 객체 식별
+- [ ] **Step 2 & 3: Mech RAG & Hybrid Inference Agent 구축**
+  - [ ] PostgreSQL + pgvector 특허/매뉴얼 RAG DB 및 유저 탐구 카드 검색 연동
+  - [ ] 실측 문서 유무에 따른 **정밀 치수 vs 근사치 수식 알고리즘** 구현
+- [ ] **Step 4: Parametric CAD & Edu Metadata Agent 구축**
+  - [ ] OpenCASCADE STEP ➔ 웹 GLB 파이프라인 및 Self-Healing 오류 자동 수정 루프
+  - [ ] STEM 공학 원리 해설 및 하브루타식 AI 탐구 퀴즈 자동 생성
+- [ ] **LLM 비용 최적화 & 데이터 재활용 시스템 (Cache-First Architecture)**
+  - [ ] 유사 이미지 임베딩 검색으로 기존 생성된 3D 모델 및 분석 결과 재사용 (토큰 비용 절감)
 - 🔗 **상세 완료 이력 보기:** *(Phase 2 완료 후 워크쓰루 레포트 첨부 예정)*
 
 ---
 
-### Phase 3: Real-time Collaboration & UI Polish (예정)
-- [ ] **Yjs + WebSockets (`y-websocket`) 실시간 동기화 개발**
+### Phase 3: Real-Time Co-Create & Fork/Remix Ecosystem (예정)
+- [ ] **Yjs + WebSockets (`y-websocket`) 실시간 동기화**
   - [ ] 모둠원 간 3D 터치 핀 위치, 질문 메모, 카메라 시점 실시간 동기화
   - [ ] 동시 접속자 마우스/터치 커서 시각화
-- [ ] **메커니즘 리믹스(Fork) 데이터베이스 연동**
-  - [ ] 다른 유저의 3D 탐구 카드를 내 워크스페이스로 복제 및 커스텀
-- [ ] **K-12 맞춤형 파스텔 톤앤매너 UI Polish 및 PWA 대응**
+- [ ] **메커니즘 리믹스(Fork) 생태계 구축**
+  - [ ] 다른 유저의 3D 탐구 카드를 내 워크스페이스로 복제(Fork)하여 부품 변경 및 커스텀
+- [ ] **K-12 맞춤형 파스텔 톤앤매너 UI Polish 및 모바일 웹 PWA 대응**
 - 🔗 **상세 완료 이력 보기:** *(Phase 3 완료 후 워크쓰루 레포트 첨부 예정)*
 
 ---
 
-### Phase 4: Field Testing & Optimization (예정)
+### Phase 4: Field Validation & Performance Optimization (예정)
 - [ ] **모바일/태블릿(iPad, Galaxy Tab) 환경 60 FPS 렌더링 최적화**
   - [ ] Draw call 줄이기 및 Mesh LOD(Level of Detail) 적용
 - [ ] **수행평가용 3D 과학 탐구 배지 카드 PDF 익스포트 엔진 구축**

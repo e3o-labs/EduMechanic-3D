@@ -55,18 +55,29 @@ export function TouchToolbar() {
           )}
         </button>
 
-        <button
-          onClick={togglePinMode}
-          className={`flex-1 border text-xs py-2 rounded-2xl font-black flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all ${
-            pinMode
-              ? 'bg-sky-500 text-white border-sky-600'
-              : 'bg-sky-50 border-sky-200 text-sky-700 hover:bg-sky-100'
-          }`}
-        >
-          <MapPin className="w-3.5 h-3.5" />
-          <span>{pinMode ? '터치하여 핀 찍기' : '질문 핀 찌르기'}</span>
-        </button>
+          <button
+            onClick={togglePinMode}
+            className={`flex-1 border text-xs py-2 rounded-2xl font-black flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all ${
+              pinMode
+                ? 'bg-sky-500 text-white border-sky-600'
+                : 'bg-sky-50 border-sky-200 text-sky-700 hover:bg-sky-100'
+            }`}
+          >
+            <MapPin className="w-3.5 h-3.5" />
+            <span>{pinMode ? '터치하여 핀 찍기' : '질문 핀 찌르기'}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+              window.open(`${backendUrl}/api/v1/cards/sharpener/export-3mf`, '_blank');
+            }}
+            className="px-3 border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs py-2 rounded-2xl font-black flex items-center justify-center gap-1 shadow-sm active:scale-95 transition-all"
+            title="3D 프린터 전송 3MF 출력"
+          >
+            <span>🖨️ 3D 프린터 출력</span>
+          </button>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }

@@ -31,6 +31,7 @@
 | **Phase 2** | **AI Agent Pipeline & Data Reuse** | 1~4단계 AI 에이전트 파이프라인, Mech RAG, 데이터 재활용 캐싱 & LLM 비용 최적화 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase2_ai_pipeline_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase2_ai_pipeline_construction.md) |
 | **Phase 3** | **Real-Time Co-Create & Fork/Remix** | 모둠 실시간 3D Yjs 동기화, 탐구 카드 Fork/리믹스 생태계, 파스텔 Claymorphism UI | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase3_cocreate_fork_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase3_cocreate_fork_construction.md) |
 | **Phase 4** | **Field Validation & Performance** | 태블릿 WebGL 60 FPS 최적화, 교실 현장 알파 테스트, 3D 수행평가 배지 리포트 PDF | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase4_field_validation_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase4_field_validation_construction.md) |
+| **Phase 5** | **Cloud Deployment & LMS Integration** | Docker Compose 프로덕션 인프라, Vercel 명세, Google Classroom LMS API 연동 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase5_cloud_lms_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase5_cloud_lms_construction.md) |
 
 ---
 
@@ -92,4 +93,16 @@
 - 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-06_phase4_field_validation_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase4_field_validation_construction.md)
 
 ---
-*모든 마일스톤(Phase 1 ~ Phase 4) 구축이 성공적으로 완료되었습니다.*
+
+### Phase 5: Cloud Deployment & LMS Integration - ✅ 완료 (2026-08-06)
+- [x] **멀티 컨테이너 Docker Compose 프로덕션 인프라 수립**
+  - [x] `web`, `api`, `yjs-ws`, `db` (pgvector:pg16), `redis` 오케스트레이션 정의 (`docker-compose.yml`)
+  - [x] Next.js multi-stage `Dockerfile` (`apps/web/Dockerfile`) 및 FastAPI `Dockerfile` (`apps/api/Dockerfile`)
+- [x] **Vercel Cloud Deployment Spec**
+  - [x] Next.js 14 Vercel 배포 설정 (`apps/web/vercel.json`)
+- [x] **Google Classroom LMS Integration API**
+  - [x] 학생 3D 탐구 카드 & AI 퀴즈 성적 제출 엔드포인트 구현 (`POST /api/v1/lms/submit`)
+- 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-06_phase5_cloud_lms_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase5_cloud_lms_construction.md)
+
+---
+*모든 마일스톤(Phase 1 ~ Phase 5) 구축이 성공적으로 완료되었습니다.*

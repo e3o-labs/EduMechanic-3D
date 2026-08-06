@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 import uuid
 from app.services.pdf.exporter import pdf_exporter
+from app.services.cad.slicer import slicer_exporter
 
 router = APIRouter()
 
@@ -53,6 +54,18 @@ async def export_card_pdf(card_id: str):
         content=pdf_bytes,
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=EduMechanic_Badge_{card_id}.pdf"}
+    )
+
+@router.post("/cards/{card_id}/export-3mf")
+async def export_slicer_3mf(card_id: str):
+    """
+    Exports 3D Printable 3MF / STL Slicing Package for Bambu Studio, Cura, and PrusaSlicer.
+    """
+    slicer_bytes = slicer_exporter.generate_3mf_package(card_id)
+    return Response(
+        content=slicer_bytes,
+        media_type="application/zip",
+        headers={"Content-Disposition": f"attachment; filename=EduMechanic_3DPrint_{card_id}.3mf"}
     )
 
 @router.get("/cards", response_model=List[ExplorationCardSchema])

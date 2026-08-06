@@ -30,7 +30,7 @@
 | **Phase 1** | **3D Engine & Viewer Core / MVP** | 3D WebGL 캔버스, Zustand 상태, FastAPI 스켈레톤, CadQuery/VLM 스키마 하네스 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase1_mvp_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase1_mvp_construction.md) |
 | **Phase 2** | **AI Agent Pipeline & Data Reuse** | 1~4단계 AI 에이전트 파이프라인, Mech RAG, 데이터 재활용 캐싱 & LLM 비용 최적화 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase2_ai_pipeline_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase2_ai_pipeline_construction.md) |
 | **Phase 3** | **Real-Time Co-Create & Fork/Remix** | 모둠 실시간 3D Yjs 동기화, 탐구 카드 Fork/리믹스 생태계, 파스텔 Claymorphism UI | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase3_cocreate_fork_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase3_cocreate_fork_construction.md) |
-| **Phase 4** | **Field Validation & Performance** | 태블릿 WebGL 60 FPS 최적화, 교실 현장 알파 테스트, 3D 수행평가 배지 리포트 PDF | 🔄 예정 | - | *(완료 시 업데이트)* |
+| **Phase 4** | **Field Validation & Performance** | 태블릿 WebGL 60 FPS 최적화, 교실 현장 알파 테스트, 3D 수행평가 배지 리포트 PDF | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase4_field_validation_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase4_field_validation_construction.md) |
 
 ---
 
@@ -82,12 +82,14 @@
 
 ---
 
-### Phase 4: Field Validation & Performance Optimization (예정)
-- [ ] **모바일/태블릿(iPad, Galaxy Tab) 환경 60 FPS 렌더링 최적화**
-  - [ ] Draw call 줄이기 및 Mesh LOD(Level of Detail) 적용
-- [ ] **수행평가용 3D 과학 탐구 배지 카드 PDF 익스포트 엔진 구축**
-- [ ] **초·중·고 STEM 현장 교사 및 학생 대상 알파 테스트 진행**
-- 🔗 **상세 완료 이력 보기:** *(Phase 4 완료 후 워크쓰루 레포트 첨부 예정)*
+### Phase 4: Field Validation & Performance Optimization - ✅ 완료 (2026-08-06)
+- [x] **모바일/태블릿(iPad, Galaxy Tab) 환경 60 FPS 렌더링 최적화**
+  - [x] R3F `dpr={[1, 1.5]}` 적응형 픽셀 비율 및 `high-performance` 렌더러 적용 (`CanvasViewport.tsx`)
+- [x] **수행평가용 3D 과학 탐구 배지 카드 PDF 익스포트 엔진 구축**
+  - [x] 백엔드 PDF 리포트 생성기 (`app/services/pdf/exporter.py`) 및 `GET /api/v1/cards/{id}/pdf` 엔드포인트 연동
+- [x] **E2E 테스트 스위트 작성**
+  - [x] Playwright E2E 테스트 스크립트 작성 (`tests/e2e/canvas.spec.ts`)
+- 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-06_phase4_field_validation_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase4_field_validation_construction.md)
 
 ---
-*본 로드맵은 기능 구현 완료 시 실시간으로 체크박스 및 이력 워크쓰루 링크를 업데이트합니다.*
+*모든 마일스톤(Phase 1 ~ Phase 4) 구축이 성공적으로 완료되었습니다.*

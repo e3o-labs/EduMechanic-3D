@@ -32,6 +32,7 @@
 | **Phase 3** | **Real-Time Co-Create & Fork/Remix** | 모둠 실시간 3D Yjs 동기화, 탐구 카드 Fork/리믹스 생태계, 파스텔 Claymorphism UI | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase3_cocreate_fork_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase3_cocreate_fork_construction.md) |
 | **Phase 4** | **Field Validation & Performance** | 태블릿 WebGL 60 FPS 최적화, 교실 현장 알파 테스트, 3D 수행평가 배지 리포트 PDF | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase4_field_validation_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase4_field_validation_construction.md) |
 | **Phase 5** | **Cloud Deployment & LMS Integration** | Docker Compose 프로덕션 인프라, Vercel 명세, Google Classroom LMS API 연동 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase5_cloud_lms_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase5_cloud_lms_construction.md) |
+| **Phase 6** | **WebXR AR Mode & 3D Printer Slicer** | WebXR 책상 증강현실 모드, Bambu/Cura 3D 프린터 3MF/STL 내보내기 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase6_ar_slicer_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase6_ar_slicer_construction.md) |
 
 ---
 
@@ -105,4 +106,13 @@
 - 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-06_phase5_cloud_lms_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase5_cloud_lms_construction.md)
 
 ---
-*모든 마일스톤(Phase 1 ~ Phase 5) 구축이 성공적으로 완료되었습니다.*
+
+### Phase 6: WebXR AR Mode & 3D Printer Slicer - ✅ 완료 (2026-08-06)
+- [x] **WebXR AR Spatial Desk Exploration**
+  - [x] 카메라 세션 히트테스트 앵커 조준 컴포넌트 구축 (`apps/web/src/components/3d/ARCanvasViewport.tsx`)
+- [x] **3D Printer 3MF / STL Slicer Exporter**
+  - [x] Bambu Studio / Cura 3MF 내보내기 API 연동 (`POST /api/v1/cards/{id}/export-3mf`, `app/services/cad/slicer.py`)
+- 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-06_phase6_ar_slicer_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase6_ar_slicer_construction.md)
+
+---
+*모든 마일스톤(Phase 1 ~ Phase 6) 구축이 성공적으로 완료되었습니다.*

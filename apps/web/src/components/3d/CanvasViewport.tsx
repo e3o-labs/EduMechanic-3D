@@ -8,6 +8,7 @@ import { MechanismModel } from './MechanismModel';
 import { PinOverlay } from './PinOverlay';
 import { useStore } from '../../store/useStore';
 import { TouchToolbar } from '../ui/TouchToolbar';
+import { VoiceTutorButton } from '../ui/VoiceTutorButton';
 import { ChevronRight, Box, Camera, Eye } from 'lucide-react';
 
 export function CanvasViewport() {
@@ -122,6 +123,8 @@ export function CanvasViewport() {
             <Box className="w-3.5 h-3.5" />
           </button>
         </div>
+
+        <VoiceTutorButton />
       </div>
 
       {/* CANVAS BOTTOM TOOLBAR AREA */}

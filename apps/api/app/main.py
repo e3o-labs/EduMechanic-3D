@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1 import scan, cards, lms
+from app.api.v1 import scan, cards, lms, voice
 
 app = FastAPI(
     title="EduMechanic 3D Backend API Engine",
@@ -19,6 +19,7 @@ app.add_middleware(
 app.include_router(scan.router, prefix="/api/v1", tags=["Scan & AI Pipeline"])
 app.include_router(cards.router, prefix="/api/v1", tags=["Exploration Cards & Fork"])
 app.include_router(lms.router, prefix="/api/v1", tags=["Google Classroom LMS Integration"])
+app.include_router(voice.router, prefix="/api/v1", tags=["AI Voice Habrutha Tutor Mechamong"])
 
 @app.get("/")
 def read_root():

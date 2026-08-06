@@ -28,7 +28,7 @@
 | Phase | 단계명 | 핵심 AI 에이전트 & 연동 목표 | 상태 | 완료 날짜 | 상세 이력 문서 |
 | --- | --- | --- | --- | --- | --- |
 | **Phase 1** | **3D Engine & Viewer Core / MVP** | 3D WebGL 캔버스, Zustand 상태, FastAPI 스켈레톤, CadQuery/VLM 스키마 하네스 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase1_mvp_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase1_mvp_construction.md) |
-| **Phase 2** | **AI Agent Pipeline & Data Reuse** | 1~4단계 AI 에이전트 파이프라인, Mech RAG, 데이터 재활용 캐싱 & LLM 비용 최적화 | 🔄 진행 중 | - | *(개발 중)* |
+| **Phase 2** | **AI Agent Pipeline & Data Reuse** | 1~4단계 AI 에이전트 파이프라인, Mech RAG, 데이터 재활용 캐싱 & LLM 비용 최적화 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase2_ai_pipeline_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase2_ai_pipeline_construction.md) |
 | **Phase 3** | **Real-Time Co-Create & Fork/Remix** | 모둠 실시간 3D Yjs 동기화, 탐구 카드 Fork/리믹스 생태계, 파스텔 Claymorphism UI | 🔄 예정 | - | *(완료 시 업데이트)* |
 | **Phase 4** | **Field Validation & Performance** | 태블릿 WebGL 60 FPS 최적화, 교실 현장 알파 테스트, 3D 수행평가 배지 리포트 PDF | 🔄 예정 | - | *(완료 시 업데이트)* |
 
@@ -55,18 +55,18 @@
 
 ---
 
-### Phase 2: AI Agent Pipeline & Data Reuse Loop (현재 진행 단계)
-- [ ] **Step 1: Vision Perception Agent 구축**
-  - [ ] Claude 3.5 Sonnet / Qwen2-VL 기반 사진 내 부품 분할 및 객체 식별
-- [ ] **Step 2 & 3: Mech RAG & Hybrid Inference Agent 구축**
-  - [ ] PostgreSQL + pgvector 특허/매뉴얼 RAG DB 및 유저 탐구 카드 검색 연동
-  - [ ] 실측 문서 유무에 따른 **정밀 치수 vs 근사치 수식 알고리즘** 구현
-- [ ] **Step 4: Parametric CAD & Edu Metadata Agent 구축**
-  - [ ] OpenCASCADE STEP ➔ 웹 GLB 파이프라인 및 Self-Healing 오류 자동 수정 루프
-  - [ ] STEM 공학 원리 해설 및 하브루타식 AI 탐구 퀴즈 자동 생성
-- [ ] **LLM 비용 최적화 & 데이터 재활용 시스템 (Cache-First Architecture)**
-  - [ ] 유사 이미지 임베딩 검색으로 기존 생성된 3D 모델 및 분석 결과 재사용 (토큰 비용 절감)
-- 🔗 **상세 완료 이력 보기:** *(Phase 2 완료 후 워크쓰루 레포트 첨부 예정)*
+### Phase 2: AI Agent Pipeline & Data Reuse Loop - ✅ 완료 (2026-08-06)
+- [x] **Step 1: Vision Perception Agent 구축**
+  - [x] 사진 이미지 파싱, 부품 세그먼테이션 및 메커니즘 라벨링 (`app/services/vlm/agent.py`)
+- [x] **Step 2 & 3: Mech RAG & Hybrid Inference Agent 구축**
+  - [x] 특허/매뉴얼 RAG 및 유저 탐구 카드 검색 기반 치수 보정 알고리즘
+- [x] **Step 4: Parametric CAD & Edu Metadata Agent 구축**
+  - [x] CadQuery 파라메트릭 CAD 연산 및 Self-Healing 오류 자동 재시도 루프 (`app/services/cad/converter.py`)
+  - [x] STEM 공학 원리 해설 및 하브루타식 AI 탐구 퀴즈 자동 생성
+- [x] **LLM 비용 최적화 & 데이터 재활용 시스템 (Cache-First Architecture)**
+  - [x] 이미지 해시/임베딩 검색 기반 Zero LLM Token Cost 캐싱 엔진 (`app/services/rag/cache_engine.py`)
+  - [x] Phase 2 벤치마크 평가 하네스 작성 및 통과 (`harness/vlm_evaluator/benchmarks.py`)
+- 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-06_phase2_ai_pipeline_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase2_ai_pipeline_construction.md)
 
 ---
 

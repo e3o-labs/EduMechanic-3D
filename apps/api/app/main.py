@@ -1,12 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import scan, cards, lms, voice
+from app.core.security import SecurityAuditMiddleware
 
 app = FastAPI(
     title="EduMechanic 3D Backend API Engine",
     version="0.1.0",
     description="AI Vision VLM + RAG + CadQuery Parametric CAD Pipeline Engine"
 )
+
+app.add_middleware(SecurityAuditMiddleware, max_requests_per_minute=100)
 
 app.add_middleware(
     CORSMiddleware,

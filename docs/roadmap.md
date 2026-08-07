@@ -34,6 +34,7 @@
 | **Phase 5** | **Cloud Deployment & LMS Integration** | Docker Compose 프로덕션 인프라, Vercel 명세, Google Classroom LMS API 연동 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase5_cloud_lms_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase5_cloud_lms_construction.md) |
 | **Phase 6** | **WebXR AR Mode & 3D Printer Slicer** | WebXR 책상 증강현실 모드, Bambu/Cura 3D 프린터 3MF/STL 내보내기 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase6_ar_slicer_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase6_ar_slicer_construction.md) |
 | **Phase 7** | **Voice Tutor Mechamong & 3D Interaction** | AI 음성 하브루타 튜터 '메카몽' STT/TTS 및 3D 음성 연동 인터랙션 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase7_voice_tutor_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase7_voice_tutor_construction.md) |
+| **Phase 8** | **Draco 3D Mesh Compression & Security Audit** | Draco 3D 메쉬 70% 압축, OWASP 보안 감사 및 Rate-Limiting 미들웨어 수립 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase8_draco_security_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase8_draco_security_construction.md) |
 
 ---
 
@@ -125,4 +126,13 @@
 - 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-06_phase7_voice_tutor_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase7_voice_tutor_construction.md)
 
 ---
-*모든 마일스톤(Phase 1 ~ Phase 7) 구축이 성공적으로 완료되었습니다.*
+
+### Phase 8: Draco 3D Mesh Compression & Security Audit - ✅ 완료 (2026-08-06)
+- [x] **Draco 3D Mesh Compression Engine**
+  - [x] Three.js/CadQuery GLB 3D 메쉬 70% 압축 서비스 (`apps/api/app/services/cad/draco_compressor.py`)
+- [x] **API Security Audit & Rate-Limiting Middleware**
+  - [x] OWASP 보안 헤더 주입 및 분당 100회 요청 제한 트래픽 방어 미들웨어 (`apps/api/app/core/security.py`)
+- 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-06_phase8_draco_security_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase8_draco_security_construction.md)
+
+---
+*모든 마일스톤(Phase 1 ~ Phase 8) 구축이 성공적으로 완료되었습니다.*

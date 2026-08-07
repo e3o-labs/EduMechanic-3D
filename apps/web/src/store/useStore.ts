@@ -16,7 +16,9 @@ interface State {
   scanningThumb: string;
   isPresetModalOpen: boolean;
   isPortfolioModalOpen: boolean;
+  locale: 'ko' | 'en' | 'ja';
 
+  setLocale: (lang: 'ko' | 'en' | 'ja') => void;
   setActivePreset: (presetId: string) => void;
   setActiveTab: (tab: DrawerTabType) => void;
   toggleSimulating: () => void;
@@ -46,6 +48,9 @@ export const useStore = create<State>((set, get) => ({
   scanningThumb: MECHANICAL_PRESETS[0].thumb,
   isPresetModalOpen: false,
   isPortfolioModalOpen: false,
+  locale: 'ko',
+
+  setLocale: (lang) => set({ locale: lang }),
 
   setActivePreset: (presetId) => {
     const found = MECHANICAL_PRESETS.find((p) => p.id === presetId);

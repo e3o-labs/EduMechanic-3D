@@ -35,6 +35,8 @@
 | **Phase 6** | **WebXR AR Mode & 3D Printer Slicer** | WebXR 책상 증강현실 모드, Bambu/Cura 3D 프린터 3MF/STL 내보내기 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase6_ar_slicer_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase6_ar_slicer_construction.md) |
 | **Phase 7** | **Voice Tutor Mechamong & 3D Interaction** | AI 음성 하브루타 튜터 '메카몽' STT/TTS 및 3D 음성 연동 인터랙션 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase7_voice_tutor_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase7_voice_tutor_construction.md) |
 | **Phase 8** | **Draco 3D Mesh Compression & Security Audit** | Draco 3D 메쉬 70% 압축, OWASP 보안 감사 및 Rate-Limiting 미들웨어 수립 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase8_draco_security_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase8_draco_security_construction.md) |
+| **Phase 9** | **Global Multilingual i18n Support** | 뷰포트 HUD, 분해도, 퀴즈 및 Pydantic 명세 다국어(한국어/영어/일본어) 연동 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase9_i18n_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase9_i18n_construction.md) |
+| **Phase 10** | **Teacher Analytics Dashboard & Auto-Grading** | 교사 전용 학업 성취도 관제 및 3D 수행평가 생기부 세특 자동 추천 시스템 | 🔄 예정 (개념 명세 수립) | - | *(개념 구조 명세 수립 완료)* |
 
 ---
 
@@ -135,4 +137,17 @@
 - 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-06_phase8_draco_security_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase8_draco_security_construction.md)
 
 ---
-*모든 마일스톤(Phase 1 ~ Phase 8) 구축이 성공적으로 완료되었습니다.*
+
+### Phase 9: Global Multilingual i18n Support - ✅ 완료 (2026-08-06)
+- [x] **글로벌 다국어 사전 및 UI 셀렉터 구축**
+  - [x] `apps/web/src/locales/dictionary.ts` 3개 국어(한국어 🇰🇷, 영어 🇺🇸, 일본어 🇯🇵) 딕셔너리 수립
+  - [x] Header 드롭다운을 통한 3D 뷰포트 HUD, 슬라이더, 퀴즈 문구 1초 동적 번역 연동
+- [x] **백엔드 메커니즘 명세 i18n 확장**
+  - [x] `apps/api/app/services/i18n/translator.py` 부품명, STEM 공학 원리 다국어 매핑 엔진 구축
+- 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-06_phase9_i18n_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase9_i18n_construction.md)
+
+---
+
+### Phase 10: Teacher Analytics Dashboard & Auto-Grading - 🔄 예정 (개념 명세 수립)
+- [ ] **개념 구조 설계 명세 (향후 도입 검토 단계)**
+  - 모둠별 3D 부품 분해도 탐구율(%), 질의 핀 개수, 퀴즈 정답률 실시간 관제 및 AI 생기부 세특 자동 추천 시스템 아키텍처 수립 완료.

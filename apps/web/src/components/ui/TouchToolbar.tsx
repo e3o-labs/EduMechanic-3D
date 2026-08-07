@@ -3,6 +3,7 @@
 import React from 'react';
 import { useStore } from '../../store/useStore';
 import { Play, Pause, MapPin, SlidersHorizontal } from 'lucide-react';
+import { dictionary } from '../../locales/dictionary';
 
 export function TouchToolbar() {
   const explodeValue = useStore((s) => s.explodeValue);
@@ -11,13 +12,16 @@ export function TouchToolbar() {
   const toggleSimulating = useStore((s) => s.toggleSimulating);
   const pinMode = useStore((s) => s.pinMode);
   const togglePinMode = useStore((s) => s.togglePinMode);
+  const locale = useStore((s) => s.locale);
+
+  const t = dictionary[locale];
 
   return (
     <div className="pointer-events-auto bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-3xl p-3 shadow-xl flex flex-col gap-2">
       {/* Explode Slider */}
       <div className="flex items-center gap-2">
         <span className="text-[11px] font-bold text-slate-600 shrink-0 flex items-center gap-1">
-          <SlidersHorizontal className="w-3.5 h-3.5 text-sky-500" /> 부품 펼쳐보기
+          <SlidersHorizontal className="w-3.5 h-3.5 text-sky-500" /> {t.explode_parts}
         </span>
         <input
           type="range"
@@ -45,12 +49,12 @@ export function TouchToolbar() {
           {isSimulating ? (
             <>
               <Pause className="w-3.5 h-3.5 fill-current" />
-              <span>일시정지</span>
+              <span>{t.pause}</span>
             </>
           ) : (
             <>
               <Play className="w-3.5 h-3.5 fill-current text-emerald-500" />
-              <span>스위치 온! 움직여보기</span>
+              <span>{t.switch_on}</span>
             </>
           )}
         </button>
@@ -64,7 +68,7 @@ export function TouchToolbar() {
             }`}
           >
             <MapPin className="w-3.5 h-3.5" />
-            <span>{pinMode ? '터치하여 핀 찍기' : '질문 핀 찌르기'}</span>
+            <span>{pinMode ? t.pin_mode_active : t.drop_pin}</span>
           </button>
 
           <button

@@ -2,13 +2,18 @@
 
 import React from 'react';
 import { useStore } from '../../store/useStore';
-import { Camera, Bookmark, Trophy } from 'lucide-react';
+import { Camera, Bookmark, Trophy, Globe } from 'lucide-react';
+import { dictionary, Locale } from '../../locales/dictionary';
 
 export function Header() {
   const setPresetModalOpen = useStore((s) => s.setPresetModalOpen);
   const setPortfolioModalOpen = useStore((s) => s.setPortfolioModalOpen);
   const remixCount = useStore((s) => s.remixCount);
   const incrementRemix = useStore((s) => s.incrementRemix);
+  const locale = useStore((s) => s.locale);
+  const setLocale = useStore((s) => s.setLocale);
+
+  const t = dictionary[locale];
 
   return (
     <header className="bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-3 py-2 flex items-center justify-between shrink-0 z-20 shadow-sm">
@@ -19,25 +24,38 @@ export function Header() {
         <div>
           <div className="flex items-center gap-1.5">
             <span className="font-extrabold text-xs text-slate-800 tracking-tight">
-              EduMechanic 3D
+              {t.app_title}
             </span>
             <span className="bg-sky-100 text-sky-700 border border-sky-200 text-[9px] font-bold px-2 py-0.5 rounded-full">
-              초중고 STEM
+              K-12 STEM
             </span>
           </div>
-          <p className="text-[10px] text-slate-500 font-medium">5학년 2반 모둠 B • 함께 탐구 모드</p>
+          <p className="text-[10px] text-slate-500 font-medium">{t.team_label} • {t.app_subtitle}</p>
         </div>
       </div>
 
       {/* Right Header Actions */}
       <div className="flex items-center gap-1.5">
+        {/* Language Selector Dropdown */}
+        <div className="relative flex items-center bg-slate-100 border border-slate-200 rounded-xl px-1.5 py-1">
+          <Globe className="w-3 h-3 text-slate-500 mr-1" />
+          <select
+            value={locale}
+            onChange={(e) => setLocale(e.target.value as Locale)}
+            className="bg-transparent text-[10px] font-bold text-slate-700 outline-none cursor-pointer"
+          >
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="ja">🇯🇵 日本語</option>
+          </select>
+        </div>
+
         <button
           onClick={() => setPresetModalOpen(true)}
           className="bg-sky-50 active:bg-sky-100 text-sky-700 text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 border border-sky-200 font-bold shadow-sm transition-all active:scale-95"
         >
           <Camera className="w-3.5 h-3.5 text-sky-500" />
-          <span className="text-[11px] hidden sm:inline">사진 찍기/선택</span>
-          <span className="text-[11px] sm:hidden">사진</span>
+          <span className="text-[11px] hidden sm:inline">사진 파싱</span>
         </button>
 
         <button
@@ -45,7 +63,7 @@ export function Header() {
           className="bg-emerald-500 active:bg-emerald-600 text-white text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1 shadow-md shadow-emerald-200 font-bold transition-all active:scale-95"
         >
           <Bookmark className="w-3.5 h-3.5" />
-          <span className="text-[11px]">내 탐구장에 담기</span>
+          <span className="text-[11px]">{t.remix_btn}</span>
           <span className="bg-emerald-700 text-emerald-100 text-[9px] px-1.5 rounded-full ml-0.5 font-mono">
             {remixCount}
           </span>

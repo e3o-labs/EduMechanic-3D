@@ -16,6 +16,7 @@ interface State {
   scanningThumb: string;
   isPresetModalOpen: boolean;
   isPortfolioModalOpen: boolean;
+  isTeacherModalOpen: boolean;
   locale: 'ko' | 'en' | 'ja';
 
   setLocale: (lang: 'ko' | 'en' | 'ja') => void;
@@ -31,6 +32,7 @@ interface State {
   triggerScanAnimation: (thumbUrl?: string) => void;
   setPresetModalOpen: (open: boolean) => void;
   setPortfolioModalOpen: (open: boolean) => void;
+  setTeacherModalOpen: (open: boolean) => void;
   addComment: (comment: CommentData) => void;
 }
 
@@ -48,6 +50,7 @@ export const useStore = create<State>((set, get) => ({
   scanningThumb: MECHANICAL_PRESETS[0].thumb,
   isPresetModalOpen: false,
   isPortfolioModalOpen: false,
+  isTeacherModalOpen: false,
   locale: 'ko',
 
   setLocale: (lang) => set({ locale: lang }),
@@ -81,6 +84,7 @@ export const useStore = create<State>((set, get) => ({
   },
   setPresetModalOpen: (open) => set({ isPresetModalOpen: open }),
   setPortfolioModalOpen: (open) => set({ isPortfolioModalOpen: open }),
+  setTeacherModalOpen: (open) => set({ isTeacherModalOpen: open }),
   addComment: (comment) =>
     set((state) => ({
       activePreset: {

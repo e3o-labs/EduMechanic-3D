@@ -2,12 +2,13 @@
 
 import React from 'react';
 import { useStore } from '../../store/useStore';
-import { Camera, Bookmark, Trophy, Globe } from 'lucide-react';
+import { Camera, Bookmark, Trophy, Globe, BarChart3 } from 'lucide-react';
 import { dictionary, Locale } from '../../locales/dictionary';
 
 export function Header() {
   const setPresetModalOpen = useStore((s) => s.setPresetModalOpen);
   const setPortfolioModalOpen = useStore((s) => s.setPortfolioModalOpen);
+  const setTeacherModalOpen = useStore((s) => s.setTeacherModalOpen);
   const remixCount = useStore((s) => s.remixCount);
   const incrementRemix = useStore((s) => s.incrementRemix);
   const locale = useStore((s) => s.locale);
@@ -59,11 +60,19 @@ export function Header() {
         </button>
 
         <button
+          onClick={() => setTeacherModalOpen(true)}
+          className="bg-indigo-50 active:bg-indigo-100 text-indigo-700 text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 border border-indigo-200 font-bold shadow-sm transition-all active:scale-95"
+        >
+          <BarChart3 className="w-3.5 h-3.5 text-indigo-500" />
+          <span className="text-[11px]">{t.teacher_analytics}</span>
+        </button>
+
+        <button
           onClick={incrementRemix}
           className="bg-emerald-500 active:bg-emerald-600 text-white text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1 shadow-md shadow-emerald-200 font-bold transition-all active:scale-95"
         >
           <Bookmark className="w-3.5 h-3.5" />
-          <span className="text-[11px]">{t.remix_btn}</span>
+          <span className="text-[11px] hidden sm:inline">{t.remix_btn}</span>
           <span className="bg-emerald-700 text-emerald-100 text-[9px] px-1.5 rounded-full ml-0.5 font-mono">
             {remixCount}
           </span>

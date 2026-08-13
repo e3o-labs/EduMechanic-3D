@@ -36,7 +36,7 @@
 | **Phase 7** | **Voice Tutor Mechamong & 3D Interaction** | AI 음성 하브루타 튜터 '메카몽' STT/TTS 및 3D 음성 연동 인터랙션 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase7_voice_tutor_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase7_voice_tutor_construction.md) |
 | **Phase 8** | **Draco 3D Mesh Compression & Security Audit** | Draco 3D 메쉬 70% 압축, OWASP 보안 감사 및 Rate-Limiting 미들웨어 수립 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase8_draco_security_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase8_draco_security_construction.md) |
 | **Phase 9** | **Global Multilingual i18n Support** | 뷰포트 HUD, 분해도, 퀴즈 및 Pydantic 명세 다국어(한국어/영어/일본어) 연동 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase9_i18n_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase9_i18n_construction.md) |
-| **Phase 10** | **Teacher Analytics Dashboard & Auto-Grading** | 교사 전용 학업 성취도 관제 및 3D 수행평가 생기부 세특 자동 추천 시스템 | 🔄 예정 (개념 명세 수립) | - | *(개념 구조 명세 수립 완료)* |
+| **Phase 10** | **Teacher Analytics Dashboard & Auto-Grading** | 교사 전용 학업 성취도 관제 및 3D 수행평가 생기부 세특 자동 추천 시스템 | **✅ 완료** | 2026-08-13 | [`2026-08-13_phase10_teacher_analytics_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-13_phase10_teacher_analytics_construction.md) |
 
 ---
 
@@ -148,6 +148,8 @@
 
 ---
 
-### Phase 10: Teacher Analytics Dashboard & Auto-Grading - 🔄 예정 (개념 명세 수립)
-- [ ] **개념 구조 설계 명세 (향후 도입 검토 단계)**
-  - 모둠별 3D 부품 분해도 탐구율(%), 질의 핀 개수, 퀴즈 정답률 실시간 관제 및 AI 생기부 세특 자동 추천 시스템 아키텍처 수립 완료.
+### Phase 10: Teacher Analytics Dashboard & Auto-Grading - ✅ 완료 (2026-08-13)
+- [x] **교사 전용 학업 성취도 관제 및 3D 수행평가 생기부 세특 자동 추천 시스템**
+  - 모둠별 3D 부품 분해도 탐구율(%), 질의 핀 개수, 퀴즈 정답률 실시간 관제 (`apps/web/src/components/ui/TeacherDashboardModal.tsx`).
+  - AI 생기부 세특 (세부능력 및 특기사항 - Student Competency Report) 자동 추천 서비스 수립 (`apps/api/app/services/analytics/evaluator.py`).
+- 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-13_phase10_teacher_analytics_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-13_phase10_teacher_analytics_construction.md)

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1 import scan, cards, lms, voice
+from app.api.v1 import scan, cards, lms, voice, analytics
 from app.core.security import SecurityAuditMiddleware
 
 app = FastAPI(
@@ -23,6 +23,7 @@ app.include_router(scan.router, prefix="/api/v1", tags=["Scan & AI Pipeline"])
 app.include_router(cards.router, prefix="/api/v1", tags=["Exploration Cards & Fork"])
 app.include_router(lms.router, prefix="/api/v1", tags=["Google Classroom LMS Integration"])
 app.include_router(voice.router, prefix="/api/v1", tags=["AI Voice Habrutha Tutor Mechamong"])
+app.include_router(analytics.router, prefix="/api/v1", tags=["Teacher Analytics & Auto-Grading"])
 
 @app.get("/")
 def read_root():

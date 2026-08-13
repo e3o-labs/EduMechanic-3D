@@ -5,6 +5,7 @@ import { Header } from '../components/ui/Header';
 import { DrawerPanel } from '../components/ui/DrawerPanel';
 import { PresetModal } from '../components/ui/PresetModal';
 import { PortfolioModal } from '../components/ui/PortfolioModal';
+import { TeacherDashboardModal } from '../components/ui/TeacherDashboardModal';
 
 // Dynamically import Three.js / R3F Viewport to prevent SSR canvas issues
 const CanvasViewport = dynamic(
@@ -22,6 +23,7 @@ export default function Home() {
       </main>
       <PresetModal />
       <PortfolioModal />
+      <TeacherDashboardModal />
     </>
   );
 }

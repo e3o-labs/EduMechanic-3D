@@ -38,6 +38,7 @@
 | **Phase 9** | **Global Multilingual i18n Support** | 뷰포트 HUD, 분해도, 퀴즈 및 Pydantic 명세 다국어(한국어/영어/일본어) 연동 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase9_i18n_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase9_i18n_construction.md) |
 | **Phase 10** | **Teacher Analytics Dashboard & Auto-Grading** | 교사 전용 학업 성취도 관제 및 3D 수행평가 생기부 세특 자동 추천 시스템 | **✅ 완료** | 2026-08-13 | [`2026-08-13_phase10_teacher_analytics_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-13_phase10_teacher_analytics_construction.md) |
 | **Phase 11** | **Live Multi-Modal VLM API & Self-Healing Pipeline** | Gemini 2.0/OpenAI/Claude 멀티 VLM 어댑터, Self-Healing JSON 파서, 음성 튜터 실시간 연동, 프론트 3D 자동 렌더링 | **✅ 완료** | 2026-08-18 | [`2026-08-18_phase11_live_vlm_integration.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-18_phase11_live_vlm_integration.md) |
+| **Phase 12** | **Database Persistence & User Auth System** | 경량 SQLite/PostgreSQL 하이브리드 DB 계층, 학생/교사 계정 인증 및 3D 탐구 포트폴리오 영속화 | **✅ 완료** | 2026-08-18 | [`2026-08-18_phase12_db_persistence_auth.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-18_phase12_db_persistence_auth.md) |
 
 ---
 
@@ -167,4 +168,18 @@
 - [x] **프론트엔드 실시간 사진 스캔 ➔ 동적 3D 캔버스 렌더링**
   - 모달 사진 업로드 시 `/api/v1/scan` 호출 후 동적 `MechanicalPreset` 생성 및 3D 캔버스 즉시 렌더링 (`apps/web/src/components/ui/PresetModal.tsx`, `apps/web/src/components/3d/MechanismModel.tsx`).
 - 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-18_phase11_live_vlm_integration.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-18_phase11_live_vlm_integration.md)
+
+---
+
+### Phase 12: Database Persistence & User Auth System - ✅ 완료 (2026-08-18)
+- [x] **경량 무설치 SQLite / PostgreSQL 하이브리드 ORM 계층 수립**
+  - `User`, `ExplorationCard`, `StudentPin`, `TeamReport` 테이블 모델링 및 세션 팩토리 (`apps/api/app/db/database.py`, `apps/api/app/db/models.py`).
+- [x] **학생/교사 인증 & 3D 탐구 포트폴리오 REST API 구축**
+  - 원클릭 로그인 엔드포인트 (`/api/v1/auth/login`, `/api/v1/auth/me`) 및 탐구 카드 저장/불러오기 API (`/api/v1/portfolio/cards`).
+- [x] **프론트엔드 3D 탐구 포트폴리오 저장 & 복원 UI 연동**
+  - 포트폴리오 모달 내 'DB 저장하기' 및 저장된 3D 탐구 카드 3D 뷰포트 원클릭 로드 연동 (`apps/web/src/components/ui/PortfolioModal.tsx`, `apps/web/src/store/useStore.ts`).
+- [x] **데이터베이스 영속화 자동화 테스트 하네스 검증**
+  - `harness/db_evaluator/test_db_persistence.py` 구축 및 전 기능 CRUD 검증 100% 통과.
+- 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-18_phase12_db_persistence_auth.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-18_phase12_db_persistence_auth.md)
+
 

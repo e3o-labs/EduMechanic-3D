@@ -10,6 +10,7 @@ dependencies = [
     "cadquery>=2.4.0; sys_platform != 'win32'",
     "trimesh>=4.2.0",
     "python-multipart>=0.0.9",
+    "sqlalchemy>=2.0.0",
 ]
 
 [build-system]

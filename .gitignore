@@ -18,6 +18,9 @@ __pycache__/
 *.pyd
 .pytest_cache/
 *.egg-info/
+*.db
+*.sqlite
+*.sqlite3
 
 # IDE & OS
 .DS_Store

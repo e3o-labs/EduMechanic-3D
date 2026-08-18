@@ -37,6 +37,7 @@
 | **Phase 8** | **Draco 3D Mesh Compression & Security Audit** | Draco 3D 메쉬 70% 압축, OWASP 보안 감사 및 Rate-Limiting 미들웨어 수립 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase8_draco_security_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase8_draco_security_construction.md) |
 | **Phase 9** | **Global Multilingual i18n Support** | 뷰포트 HUD, 분해도, 퀴즈 및 Pydantic 명세 다국어(한국어/영어/일본어) 연동 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase9_i18n_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase9_i18n_construction.md) |
 | **Phase 10** | **Teacher Analytics Dashboard & Auto-Grading** | 교사 전용 학업 성취도 관제 및 3D 수행평가 생기부 세특 자동 추천 시스템 | **✅ 완료** | 2026-08-13 | [`2026-08-13_phase10_teacher_analytics_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-13_phase10_teacher_analytics_construction.md) |
+| **Phase 11** | **Live Multi-Modal VLM API & Self-Healing Pipeline** | Gemini 2.0/OpenAI/Claude 멀티 VLM 어댑터, Self-Healing JSON 파서, 음성 튜터 실시간 연동, 프론트 3D 자동 렌더링 | **✅ 완료** | 2026-08-18 | [`2026-08-18_phase11_live_vlm_integration.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-18_phase11_live_vlm_integration.md) |
 
 ---
 
@@ -153,3 +154,17 @@
   - 모둠별 3D 부품 분해도 탐구율(%), 질의 핀 개수, 퀴즈 정답률 실시간 관제 (`apps/web/src/components/ui/TeacherDashboardModal.tsx`).
   - AI 생기부 세특 (세부능력 및 특기사항 - Student Competency Report) 자동 추천 서비스 수립 (`apps/api/app/services/analytics/evaluator.py`).
 - 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-13_phase10_teacher_analytics_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-13_phase10_teacher_analytics_construction.md)
+
+---
+
+### Phase 11: Live Multi-Modal VLM API & Self-Healing Pipeline - ✅ 완료 (2026-08-18)
+- [x] **멀티 프로바이더 VLM 어댑터 및 환경 설정 수립**
+  - Google Gemini 2.0 Flash / 1.5 Pro, OpenAI GPT-4o, Anthropic Claude 3.5 Sonnet 및 Seamless Mock Fallback 어댑터 (`apps/api/app/services/vlm/vlm_providers.py`, `apps/api/app/core/config.py`).
+- [x] **K-12 STEM 역설계 프롬프트 및 Self-Healing JSON 파서**
+  - 마크다운 코드 블록 제거, 정규식 추출 및 Pydantic 스키마 검증을 통한 무결성 보장 (`apps/api/app/services/vlm/agent.py`).
+- [x] **AI 음성 하브루타 튜터 '메카몽' 실시간 LLM 대화 & 3D 액션 연동**
+  - 학생 질의에 대한 소크라테스식 문답 및 3D 뷰포트 액션(`set_explode`, `toggle_simulate`, `toggle_xray`) 실시간 연동 (`apps/api/app/services/vlm/voice_tutor.py`).
+- [x] **프론트엔드 실시간 사진 스캔 ➔ 동적 3D 캔버스 렌더링**
+  - 모달 사진 업로드 시 `/api/v1/scan` 호출 후 동적 `MechanicalPreset` 생성 및 3D 캔버스 즉시 렌더링 (`apps/web/src/components/ui/PresetModal.tsx`, `apps/web/src/components/3d/MechanismModel.tsx`).
+- 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-18_phase11_live_vlm_integration.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-18_phase11_live_vlm_integration.md)
+

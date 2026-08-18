@@ -9,6 +9,7 @@ ENV/
 out/
 build/
 dist/
+*.tsbuildinfo
 
 # Python cache & build
 __pycache__/

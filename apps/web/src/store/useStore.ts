@@ -21,6 +21,7 @@ interface State {
 
   setLocale: (lang: 'ko' | 'en' | 'ja') => void;
   setActivePreset: (presetId: string) => void;
+  setCustomPreset: (preset: MechanicalPreset) => void;
   setActiveTab: (tab: DrawerTabType) => void;
   toggleSimulating: () => void;
   toggleXray: () => void;
@@ -68,6 +69,18 @@ export const useStore = create<State>((set, get) => ({
       get().triggerScanAnimation(found.thumb);
     }
   },
+
+  setCustomPreset: (preset) => {
+    set({
+      activePreset: preset,
+      selectedPartId: null,
+      explodeValue: 0,
+      isSimulating: false,
+      scanningThumb: preset.thumb,
+    });
+    get().triggerScanAnimation(preset.thumb);
+  },
+
   setActiveTab: (tab) => set({ activeTab: tab }),
   toggleSimulating: () => set((state) => ({ isSimulating: !state.isSimulating })),
   toggleXray: () => set((state) => ({ isXray: !state.isXray })),

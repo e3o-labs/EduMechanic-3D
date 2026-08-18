@@ -43,24 +43,28 @@ export function MechanismModel() {
     }
   };
 
-  const getPartMaterial = (partId: string, baseColor: number) => {
+  const getPartMaterial = (partId: string, baseColor: number | string) => {
     const isSelected = selectedPartId === partId;
+    const isHousing = partId.toLowerCase().includes('housing') || partId.toLowerCase().includes('하우징');
     return (
       <meshStandardMaterial
         color={isSelected ? '#38bdf8' : baseColor}
         roughness={isXray ? 0.1 : 0.3}
         metalness={0.4}
         wireframe={isXray}
-        transparent={isXray || partId === 'housing'}
-        opacity={partId === 'housing' ? 0.4 : isXray ? 0.6 : 1.0}
+        transparent={isXray || isHousing}
+        opacity={isHousing ? 0.4 : isXray ? 0.6 : 1.0}
         emissive={isSelected ? '#0284c7' : '#000000'}
         emissiveIntensity={isSelected ? 0.4 : 0}
       />
     );
   };
 
+  const isBuiltin = ['sharpener', 'musicbox', 'bicycle'].includes(activePreset.id);
+
   return (
     <group ref={groupRef}>
+      {/* 1. Preset: Sharpener */}
       {activePreset.id === 'sharpener' && (
         <group>
           {/* Housing */}
@@ -104,6 +108,7 @@ export function MechanismModel() {
         </group>
       )}
 
+      {/* 2. Preset: Music Box */}
       {activePreset.id === 'musicbox' && (
         <group>
           {/* Main Spring Drum */}
@@ -143,6 +148,7 @@ export function MechanismModel() {
         </group>
       )}
 
+      {/* 3. Preset: Bicycle Planetary Gear */}
       {activePreset.id === 'bicycle' && (
         <group>
           {/* Center Sun Gear */}
@@ -181,6 +187,52 @@ export function MechanismModel() {
             <cylinderGeometry args={[10 + factor * 4, 10 + factor * 4, 2.5, 32, 1, true]} />
             {getPartMaterial('ring', 0x0284c7)}
           </mesh>
+        </group>
+      )}
+
+      {/* 4. Dynamic AI-Parsed VLM Mechanism */}
+      {!isBuiltin && (
+        <group>
+          {activePreset.parts.map((part, idx) => {
+            const colors = ['#38bdf8', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4'];
+            const partColor = part.color || colors[idx % colors.length];
+            const offset = part.explodeOffset || [0, (idx - 1) * 2.5, 0];
+            const posX = offset[0] * factor * 5;
+            const posY = offset[1] * factor * 5;
+            const posZ = offset[2] * factor * 5;
+
+            const rTop = part.radiusTop || (part.geometryType === 'cylinder' ? 5 : 3.5);
+            const rBottom = part.radiusBottom || (part.geometryType === 'cylinder' ? 5 : 3.5);
+            const h = part.height || 3.0;
+
+            const isRot = part.isRotating || part.id.includes('gear') || part.id.includes('shaft');
+
+            if (isRot) {
+              return (
+                <group key={part.id} ref={rotatingGroupRef} position={[posX, posY, posZ]}>
+                  <mesh onPointerDown={(e) => handlePointerDown(e, part.id)}>
+                    <cylinderGeometry args={[rTop, rBottom, h, 20]} />
+                    {getPartMaterial(part.id, partColor)}
+                  </mesh>
+                </group>
+              );
+            }
+
+            return (
+              <mesh
+                key={part.id}
+                position={[posX, posY, posZ]}
+                onPointerDown={(e) => handlePointerDown(e, part.id)}
+              >
+                {part.geometryType === 'box' ? (
+                  <boxGeometry args={[rTop * 2, h, rBottom * 2]} />
+                ) : (
+                  <cylinderGeometry args={[rTop, rBottom, h, 24, 1, part.id.includes('housing')]} />
+                )}
+                {getPartMaterial(part.id, partColor)}
+              </mesh>
+            );
+          })}
         </group>
       )}
     </group>

@@ -8,6 +8,13 @@ export interface PartSpec {
   name: string;
   function: string;
   desc: string;
+  geometryType?: string;
+  radiusTop?: number;
+  radiusBottom?: number;
+  height?: number;
+  explodeOffset?: [number, number, number];
+  color?: string;
+  isRotating?: boolean;
 }
 
 export interface CommentData {

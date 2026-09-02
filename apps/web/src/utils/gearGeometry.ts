@@ -80,32 +80,27 @@ export function createInvoluteGearGeometry(options: GearGeometryOptions = {}): T
 
 /**
  * Generates true 3D Planetary Helical Milling Cutter Roller for Pencil Sharpener.
- * Has 10 spiraling helical fluted cutting edges around conical/cylindrical core.
  */
 export function createHelicalCutterGeometry(
   radius: number = 3.2,
   height: number = 10.0,
   numFlutes: number = 10,
-  twistAngle: number = Math.PI / 3
+  twistAngle: number = Math.PI / 2.8
 ): THREE.BufferGeometry {
   const geom = new THREE.CylinderGeometry(radius * 0.75, radius, height, numFlutes * 4, 16);
   const pos = geom.attributes.position;
 
-  // Deform cylinder vertices into helical cutting flutes
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i);
     const y = pos.getY(i);
     const z = pos.getZ(i);
 
-    // Normalized height -0.5 to 0.5
     const vNorm = y / height;
     const twist = vNorm * twistAngle;
 
-    // Angle around axis
     let angle = Math.atan2(z, x) + twist;
     const r = Math.sqrt(x * x + z * z);
 
-    // Modulate radius by number of flutes to create sharp helical cutting teeth
     const fluteWave = Math.sin(angle * numFlutes);
     const rMod = r * (0.85 + 0.18 * Math.max(0, fluteWave));
 
@@ -127,10 +122,8 @@ export function createInternalRingGearGeometry(
   depth: number = 4.0
 ): THREE.BufferGeometry {
   const shape = new THREE.Shape();
-  // Outer circle
   shape.absarc(0, 0, outerRadius, 0, Math.PI * 2, false);
 
-  // Inner hole with internal teeth
   const hole = new THREE.Path();
   const anglePerTooth = (2 * Math.PI) / teethCount;
   const toothDepth = (outerRadius - innerRadius) * 0.35;
@@ -138,7 +131,6 @@ export function createInternalRingGearGeometry(
   for (let i = 0; i < teethCount; i++) {
     const a = i * anglePerTooth;
     const da = anglePerTooth / 4;
-
     const r1 = innerRadius;
     const r2 = innerRadius - toothDepth;
 
@@ -166,20 +158,124 @@ export function createInternalRingGearGeometry(
 }
 
 /**
- * Generates Hexagonal Standard Pencil with Sharpened Conical Wood Core & Graphite Lead.
+ * Generates Hexagonal Standard Pencil.
  */
 export function createPencilGeometry(length: number = 22.0, radius: number = 2.0): { body: THREE.BufferGeometry; cone: THREE.BufferGeometry; lead: THREE.BufferGeometry } {
-  // Hexagonal wood pencil shaft (6-sided cylinder)
   const body = new THREE.CylinderGeometry(radius, radius, length, 6);
   body.rotateZ(Math.PI / 2);
 
-  // Conical sharpened wood tip
   const cone = new THREE.ConeGeometry(radius, 5.0, 16);
   cone.rotateZ(-Math.PI / 2);
 
-  // Graphite tip
   const lead = new THREE.ConeGeometry(radius * 0.35, 1.8, 16);
   lead.rotateZ(-Math.PI / 2);
 
   return { body, cone, lead };
+}
+
+/**
+ * [Phase 12: Music Box] Generates 3D Melody Pin Cylinder Drum with embedded pins.
+ */
+export function createMusicboxDrumGeometry(radius: number = 4.5, length: number = 16.0, numPins: number = 48): THREE.BufferGeometry {
+  const drumGeom = new THREE.CylinderGeometry(radius, radius, length, 24);
+  const pos = drumGeom.attributes.position;
+
+  // Add micro bumps for melody pins around cylinder surface
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i);
+    const x = pos.getX(i);
+    const z = pos.getZ(i);
+    const r = Math.sqrt(x * x + z * z);
+    if (r > radius * 0.8) {
+      const angle = Math.atan2(z, x);
+      const pinWave = Math.sin(angle * 12 + y * 2.5);
+      if (pinWave > 0.85) {
+        pos.setX(i, x * 1.12);
+        pos.setZ(i, z * 1.12);
+      }
+    }
+  }
+  drumGeom.computeVertexNormals();
+  return drumGeom;
+}
+
+/**
+ * [Phase 12: Music Box] Generates Tuned Steel Comb Reeds with graduated lengths.
+ */
+export function createCombReedsGeometry(width: number = 14.0, numTeeth: number = 18): THREE.BufferGeometry {
+  const shape = new THREE.Shape();
+  // Base mounting block
+  shape.moveTo(-width / 2, 0);
+  shape.lineTo(width / 2, 0);
+  shape.lineTo(width / 2, 3);
+
+  // Graduated vibrating teeth (longer on left/bass, shorter on right/treble)
+  const toothPitch = width / numTeeth;
+  const toothWidth = toothPitch * 0.65;
+
+  for (let t = numTeeth - 1; t >= 0; t--) {
+    const xLeft = -width / 2 + t * toothPitch;
+    const xRight = xLeft + toothWidth;
+    // Length formula: 10mm (bass) down to 4.5mm (treble)
+    const tLen = 4.5 + (1.0 - t / numTeeth) * 5.5;
+
+    shape.lineTo(xRight, 3);
+    shape.lineTo(xRight, 3 + tLen);
+    shape.lineTo(xLeft, 3 + tLen);
+    shape.lineTo(xLeft, 3);
+  }
+
+  shape.lineTo(-width / 2, 3);
+  shape.closePath();
+
+  const geom = new THREE.ExtrudeGeometry(shape, { depth: 0.8, bevelEnabled: true, bevelSize: 0.1, bevelThickness: 0.1 });
+  geom.center();
+  return geom;
+}
+
+/**
+ * [Phase 12: Music Box] Generates High-Speed 2-Blade Air Drag Governor Fan.
+ */
+export function createAirGovernorGeometry(bladeRadius: number = 4.0, height: number = 8.0): THREE.BufferGeometry {
+  const shape = new THREE.Shape();
+  // Central shaft
+  shape.absarc(0, 0, 0.8, 0, Math.PI * 2, false);
+
+  // 2 aerodynamic drag wings
+  shape.moveTo(0.8, -0.2);
+  shape.lineTo(bladeRadius, -0.6);
+  shape.lineTo(bladeRadius, 0.6);
+  shape.lineTo(0.8, 0.2);
+
+  shape.moveTo(-0.8, 0.2);
+  shape.lineTo(-bladeRadius, 0.6);
+  shape.lineTo(-bladeRadius, -0.6);
+  shape.lineTo(-0.8, -0.2);
+
+  const geom = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false });
+  geom.center();
+  return geom;
+}
+
+/**
+ * [Phase 12: Music Box] Generates Butterfly Winding Key.
+ */
+export function createWindingKeyGeometry(): THREE.BufferGeometry {
+  const shape = new THREE.Shape();
+  // Center collar
+  shape.absarc(0, 0, 1.2, 0, Math.PI * 2, false);
+
+  // Left wing
+  shape.moveTo(-1.0, 0.6);
+  shape.bezierCurveTo(-3.5, 4.0, -7.0, 3.5, -6.5, 0.0);
+  shape.bezierCurveTo(-6.0, -3.5, -3.0, -3.0, -1.0, -0.6);
+
+  // Right wing
+  shape.moveTo(1.0, 0.6);
+  shape.bezierCurveTo(3.5, 4.0, 7.0, 3.5, 6.5, 0.0);
+  shape.bezierCurveTo(6.0, -3.5, 3.0, -3.0, 1.0, -0.6);
+
+  const geom = new THREE.ExtrudeGeometry(shape, { depth: 1.4, bevelEnabled: true, bevelSize: 0.2, bevelThickness: 0.2 });
+  geom.center();
+  return geom;
 }

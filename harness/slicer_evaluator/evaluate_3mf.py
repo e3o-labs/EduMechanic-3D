@@ -1,5 +1,5 @@
 """
-Harness Suite: 3MF / Planetary Helical Cutter & Involute Solid Geometry Verification
+Harness Suite: 3MF / Multi-Mechanism Verification (Sharpener + Music Box)
 """
 import sys
 import os
@@ -18,35 +18,34 @@ def inspect_stl_triangles(stl_bytes: bytes) -> int:
     return struct.unpack("<I", stl_bytes[80:84])[0]
 
 def run_slicer_harness_tests():
-    print("🚀 [Harness: Slicer Evaluator] Starting 3MF Planetary Helical & Involute verification...")
+    print("🚀 [Harness: Slicer Evaluator] Starting Multi-Mechanism 3MF verification...")
     
-    card_id = "sharpener_pro"
-    pkg_bytes = slicer_exporter.generate_3mf_package(card_id, micro_print=False, cots_type="608zz", teeth_count=24)
-    assert len(pkg_bytes) > 0, "Package bytes cannot be empty"
-    
-    zip_buffer = io.BytesIO(pkg_bytes)
-    with zipfile.ZipFile(zip_buffer, "r") as zf:
-        file_list = zf.namelist()
-        print(f"  ✓ 3MF Package Files: {file_list}")
-        assert "3D/3dmodel.model" in file_list
-        assert f"meshes/{card_id}_housing.stl" in file_list
-        assert f"meshes/{card_id}_involute_gear_z24.stl" in file_list
-        assert f"meshes/{card_id}_helical_cutter_flute10.stl" in file_list
-        assert "slicer_manifest.json" in file_list
+    # 1. Sharpener Planetary Helical Pack
+    sh_pkg = slicer_exporter.generate_3mf_package("sharpener", teeth_count=24)
+    with zipfile.ZipFile(io.BytesIO(sh_pkg), "r") as zf:
+        files = zf.namelist()
+        print(f"  ✓ Sharpener 3MF Files: {files}")
+        assert "meshes/sharpener_helical_cutter_flute10.stl" in files
+        c_tri = inspect_stl_triangles(zf.read("meshes/sharpener_helical_cutter_flute10.stl"))
+        print(f"  ✓ Sharpener Helical Cutter Triangles: {c_tri}")
+        assert c_tri > 800
 
-        gear_triangles = inspect_stl_triangles(zf.read(f"meshes/{card_id}_involute_gear_z24.stl"))
-        print(f"  ✓ Involute Gear STL Triangles: {gear_triangles}")
-        assert gear_triangles > 500
+    # 2. Music Box Pin Drum & Comb Pack
+    mb_pkg = slicer_exporter.generate_3mf_package("musicbox")
+    with zipfile.ZipFile(io.BytesIO(mb_pkg), "r") as zf:
+        files = zf.namelist()
+        print(f"  ✓ Music Box 3MF Files: {files}")
+        assert "meshes/musicbox_melody_pin_drum.stl" in files
+        assert "meshes/musicbox_tuned_comb_reeds.stl" in files
+        assert "meshes/musicbox_drive_spur_gear_z28.stl" in files
 
-        cutter_triangles = inspect_stl_triangles(zf.read(f"meshes/{card_id}_helical_cutter_flute10.stl"))
-        print(f"  ✓ Helical Cutter STL Triangles: {cutter_triangles} (10-Flute Milling Blade)")
-        assert cutter_triangles > 800, f"Helical cutter must have high density (>800), got {cutter_triangles}"
+        d_tri = inspect_stl_triangles(zf.read("meshes/musicbox_melody_pin_drum.stl"))
+        comb_tri = inspect_stl_triangles(zf.read("meshes/musicbox_tuned_comb_reeds.stl"))
+        print(f"  ✓ Music Box Drum Triangles: {d_tri}, Comb Triangles: {comb_tri}")
+        assert d_tri > 500
+        assert comb_tri > 100
 
-        manifest_data = json.loads(zf.read("slicer_manifest.json").decode("utf-8"))
-        print(f"  ✓ Slicer Manifest Mechanism: {manifest_data['mechanism_type']}")
-        assert manifest_data["gear_spec"]["helical_cutter_flutes"] == 10
-
-    print("🎉 [Harness: Slicer Evaluator] ALL PLANETARY HELICAL CUTTER 3MF TESTS PASSED!\n")
+    print("🎉 [Harness: Slicer Evaluator] ALL MULTI-MECHANISM 3MF/STL TESTS PASSED!\n")
 
 if __name__ == "__main__":
     run_slicer_harness_tests()

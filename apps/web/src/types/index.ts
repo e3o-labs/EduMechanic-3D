@@ -54,5 +54,16 @@ export interface PinItem {
   createdAt: string;
 }
 
+export interface MakerParams {
+  teethCount: number;
+  shaftDiameter: number;
+  appliedTolerance: number;
+  tolerancePreset: 'precise_bambu' | 'standard_prusa' | 'school_ender';
+  cotsMount: '608zz' | 'm3_bolt' | 'lego_pin' | 'd_shaft';
+  isMicroPrint: boolean;
+  showPrintabilityHeatmap: boolean;
+}
+
 export type ViewCameraPreset = 'iso' | 'top';
-export type DrawerTabType = 'tab-inspect' | 'tab-team' | 'tab-quiz';
+export type DrawerTabType = 'tab-inspect' | 'tab-team' | 'tab-quiz' | 'tab-maker';
+

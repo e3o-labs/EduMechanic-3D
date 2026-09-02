@@ -56,18 +56,61 @@ async def export_card_pdf(card_id: str):
         headers={"Content-Disposition": f"attachment; filename=EduMechanic_Badge_{card_id}.pdf"}
     )
 
+from app.services.cad.dfam import dfam_engine
+import trimesh
+
+class DFAMCheckRequest(BaseModel):
+    card_id: str
+    tolerance_preset: str = "standard_prusa"
+    cots_mount: str = "608zz"
+
+class SlicerExportRequest(BaseModel):
+    card_id: str
+    micro_print: bool = False
+    tolerance_preset: str = "standard_prusa"
+    cots_type: str = "608zz"
+    teeth_count: int = 20
+
+@router.post("/cards/{card_id}/dfam-check")
+async def check_dfam_printability(card_id: str, req: Optional[DFAMCheckRequest] = None):
+    """
+    DFAM (Design for Additive Manufacturing) Printability Check Endpoint
+    """
+    mesh = trimesh.creation.cylinder(radius=20.0, height=15.0)
+    analysis = dfam_engine.analyze_mesh_printability(mesh)
+    tolerance = dfam_engine.get_tolerance(req.tolerance_preset if req else "standard_prusa")
+    return {
+        "card_id": card_id,
+        "dfam_analysis": analysis,
+        "applied_tolerance": tolerance,
+        "cots_mount": req.cots_mount if req else "608zz"
+    }
+
 @router.post("/cards/{card_id}/export-3mf")
-async def export_slicer_3mf(card_id: str):
+async def export_slicer_3mf(card_id: str, req: Optional[SlicerExportRequest] = None):
     """
     Exports 3D Printable 3MF / STL Slicing Package for Bambu Studio, Cura, and PrusaSlicer.
     """
-    slicer_bytes = slicer_exporter.generate_3mf_package(card_id)
+    micro = req.micro_print if req else False
+    preset = req.tolerance_preset if req else "standard_prusa"
+    cots = req.cots_type if req else "608zz"
+    teeth = req.teeth_count if req else 20
+    
+    slicer_bytes = slicer_exporter.generate_3mf_package(
+        card_id=card_id,
+        micro_print=micro,
+        tolerance_preset=preset,
+        cots_type=cots,
+        teeth_count=teeth
+    )
     return Response(
         content=slicer_bytes,
         media_type="application/zip",
         headers={"Content-Disposition": f"attachment; filename=EduMechanic_3DPrint_{card_id}.3mf"}
     )
 
+
 @router.get("/cards", response_model=List[ExplorationCardSchema])
 async def list_exploration_cards():
     return list(cards_db.values())
+

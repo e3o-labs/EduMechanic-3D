@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { useStore } from '../../store/useStore';
 import { DrawerTabType } from '../../types';
-import { Search, MessageSquare, Puzzle, Trophy, Send, CheckCircle2 } from 'lucide-react';
+import { Search, MessageSquare, Puzzle, Trophy, Send, CheckCircle2, Wrench } from 'lucide-react';
+import { MakerTab } from './MakerTab';
 
 export function DrawerPanel() {
   const activePreset = useStore((s) => s.activePreset);
@@ -39,10 +40,10 @@ export function DrawerPanel() {
   return (
     <div className="w-full md:w-80 lg:w-96 bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col shrink-0 h-[48vh] md:h-full z-20 shadow-lg">
       {/* PANEL TAB HEADERS */}
-      <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-2 py-2 shrink-0 overflow-x-auto">
+      <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-2 py-2 shrink-0 overflow-x-auto gap-1">
         <button
           onClick={() => setActiveTab('tab-inspect')}
-          className={`tab-btn text-[11px] font-black px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 shrink-0 ${
+          className={`tab-btn text-[11px] font-black px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 shrink-0 ${
             activeTab === 'tab-inspect'
               ? 'text-sky-700 bg-sky-100 border border-sky-200'
               : 'text-slate-500 hover:text-slate-800'
@@ -52,14 +53,25 @@ export function DrawerPanel() {
         </button>
 
         <button
+          onClick={() => setActiveTab('tab-maker')}
+          className={`tab-btn text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 shrink-0 ${
+            activeTab === 'tab-maker'
+              ? 'text-sky-700 bg-sky-100 border border-sky-200'
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Wrench className="w-3 h-3 text-sky-600" /> 3D 메이커스
+        </button>
+
+        <button
           onClick={() => setActiveTab('tab-team')}
-          className={`tab-btn text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 shrink-0 ${
+          className={`tab-btn text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 shrink-0 ${
             activeTab === 'tab-team'
               ? 'text-sky-700 bg-sky-100 border border-sky-200'
               : 'text-slate-500 hover:text-slate-800'
           }`}
         >
-          <MessageSquare className="w-3 h-3" /> 함께 탐구하기
+          <MessageSquare className="w-3 h-3" /> 함께 탐구
           <span className="bg-sky-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold">
             {activePreset.comments.length}
           </span>
@@ -67,19 +79,22 @@ export function DrawerPanel() {
 
         <button
           onClick={() => setActiveTab('tab-quiz')}
-          className={`tab-btn text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 shrink-0 ${
+          className={`tab-btn text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 shrink-0 ${
             activeTab === 'tab-quiz'
               ? 'text-sky-700 bg-sky-100 border border-sky-200'
               : 'text-slate-500 hover:text-slate-800'
           }`}
         >
-          <Puzzle className="w-3 h-3" /> AI 탐구 퀴즈
+          <Puzzle className="w-3 h-3" /> 퀴즈
         </button>
       </div>
 
       {/* TAB CONTENT SCROLL CONTAINER */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50/50">
+        {activeTab === 'tab-maker' && <MakerTab />}
+
         {activeTab === 'tab-inspect' && (
+
           <div className="space-y-3">
             {/* AI Summary */}
             <div className="bg-white border-2 border-sky-100 rounded-3xl p-3.5 space-y-2 shadow-sm">

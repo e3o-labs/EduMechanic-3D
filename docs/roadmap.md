@@ -37,8 +37,7 @@
 | **Phase 8** | **Draco 3D Mesh Compression & Security Audit** | Draco 3D 메쉬 70% 압축, OWASP 보안 감사 및 Rate-Limiting 미들웨어 수립 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase8_draco_security_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase8_draco_security_construction.md) |
 | **Phase 9** | **Global Multilingual i18n Support** | 뷰포트 HUD, 분해도, 퀴즈 및 Pydantic 명세 다국어(한국어/영어/일본어) 연동 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase9_i18n_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase9_i18n_construction.md) |
 | **Phase 10** | **Teacher Analytics Dashboard & Auto-Grading** | 교사 전용 학업 성취도 관제 및 3D 수행평가 생기부 세특 자동 추천 시스템 | **✅ 완료** | 2026-08-13 | [`2026-08-13_phase10_teacher_analytics_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-13_phase10_teacher_analytics_construction.md) |
-| **Phase 11** | **Live Multi-Modal VLM API & Self-Healing Pipeline** | Gemini 2.0/OpenAI/Claude 멀티 VLM 어댑터, Self-Healing JSON 파서, 음성 튜터 실시간 연동, 프론트 3D 자동 렌더링 | **✅ 완료** | 2026-08-18 | [`2026-08-18_phase11_live_vlm_integration.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-18_phase11_live_vlm_integration.md) |
-| **Phase 12** | **Database Persistence & User Auth System** | 경량 SQLite/PostgreSQL 하이브리드 DB 계층, 학생/교사 계정 인증 및 3D 탐구 포트폴리오 영속화 | **✅ 완료** | 2026-08-18 | [`2026-08-18_phase12_db_persistence_auth.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-18_phase12_db_persistence_auth.md) |
+| **Phase 11** | **Snap-to-Print Full-Cycle Makers Pipeline** | VLM 사진 원리 추론 ➔ AI 대화형 파라메트릭 학습 ➔ DFAM 3D 프린팅 검증 & 실물 출력 패키징 | **✅ 완료** | 2026-08-30 | [`2026-08-30_phase11_snap_to_print_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-30_phase11_snap_to_print_construction.md) |
 
 ---
 
@@ -158,28 +157,22 @@
 
 ---
 
-### Phase 11: Live Multi-Modal VLM API & Self-Healing Pipeline - ✅ 완료 (2026-08-18)
-- [x] **멀티 프로바이더 VLM 어댑터 및 환경 설정 수립**
-  - Google Gemini 2.0 Flash / 1.5 Pro, OpenAI GPT-4o, Anthropic Claude 3.5 Sonnet 및 Seamless Mock Fallback 어댑터 (`apps/api/app/services/vlm/vlm_providers.py`, `apps/api/app/core/config.py`).
-- [x] **K-12 STEM 역설계 프롬프트 및 Self-Healing JSON 파서**
-  - 마크다운 코드 블록 제거, 정규식 추출 및 Pydantic 스키마 검증을 통한 무결성 보장 (`apps/api/app/services/vlm/agent.py`).
-- [x] **AI 음성 하브루타 튜터 '메카몽' 실시간 LLM 대화 & 3D 액션 연동**
-  - 학생 질의에 대한 소크라테스식 문답 및 3D 뷰포트 액션(`set_explode`, `toggle_simulate`, `toggle_xray`) 실시간 연동 (`apps/api/app/services/vlm/voice_tutor.py`).
-- [x] **프론트엔드 실시간 사진 스캔 ➔ 동적 3D 캔버스 렌더링**
-  - 모달 사진 업로드 시 `/api/v1/scan` 호출 후 동적 `MechanicalPreset` 생성 및 3D 캔버스 즉시 렌더링 (`apps/web/src/components/ui/PresetModal.tsx`, `apps/web/src/components/3d/MechanismModel.tsx`).
-- 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-18_phase11_live_vlm_integration.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-18_phase11_live_vlm_integration.md)
-
----
-
-### Phase 12: Database Persistence & User Auth System - ✅ 완료 (2026-08-18)
-- [x] **경량 무설치 SQLite / PostgreSQL 하이브리드 ORM 계층 수립**
-  - `User`, `ExplorationCard`, `StudentPin`, `TeamReport` 테이블 모델링 및 세션 팩토리 (`apps/api/app/db/database.py`, `apps/api/app/db/models.py`).
-- [x] **학생/교사 인증 & 3D 탐구 포트폴리오 REST API 구축**
-  - 원클릭 로그인 엔드포인트 (`/api/v1/auth/login`, `/api/v1/auth/me`) 및 탐구 카드 저장/불러오기 API (`/api/v1/portfolio/cards`).
-- [x] **프론트엔드 3D 탐구 포트폴리오 저장 & 복원 UI 연동**
-  - 포트폴리오 모달 내 'DB 저장하기' 및 저장된 3D 탐구 카드 3D 뷰포트 원클릭 로드 연동 (`apps/web/src/components/ui/PortfolioModal.tsx`, `apps/web/src/store/useStore.ts`).
-- [x] **데이터베이스 영속화 자동화 테스트 하네스 검증**
-  - `harness/db_evaluator/test_db_persistence.py` 구축 및 전 기능 CRUD 검증 100% 통과.
-- 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-18_phase12_db_persistence_auth.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-18_phase12_db_persistence_auth.md)
+### Phase 11: Snap-to-Print Full-Cycle Makers Pipeline - ✅ 완료 (2026-08-30)
+- [x] **11.1 VLM 기계 메커니즘 원리 추론 & 대화형 파라메트릭 학습 루프**
+  - [x] 사진 속 기계 요소(감속비, 링크 길이, 캠 프로파일) 자동 분석 및 학생 수준별 원리 설명
+  - [x] AI 대화형 파라메터 튜닝 인터페이스 (이빨 수, 축 직경, 결합 방식 실시간 조절)
+  - [x] 기구학적(Kinematic) 실시간 모션 인터랙션 검증 (맞물림 간섭 체크)
+- [x] **11.2 DFAM (Design for Additive Manufacturing) 지능형 출력 검증 엔진**
+  - [x] 3D 웹 캔버스 '출력 적합성 히트맵' (오버행 45° 초과, 최소 벽 두께 < 1.2mm, 브릿징 감지)
+  - [x] FDM 수축률 및 결합 공차(Tolerance Engine) 자동 적용 (슬립핏 +0.3mm, 프레스핏 +0.15mm)
+  - [x] 수평 홀 눈물방울(Tear-drop) 형상 변환 및 바닥 모따기(Chamfer) 자동 주입
+- [x] **11.3 Micro-Print & 표준 COTS 결합 메이킹 아키텍처**
+  - [x] 15~20분 초고속 출력용 '핵심 메커니즘 미니어처' 슬라이싱 프리셋
+  - [x] 표준 COTS(608ZZ 베어링, M3 볼트, TT 모터, 레고 테크닉 홀) 결합 조립 규격 연동
+  - [x] Print-in-Place(일체형 비조립 출력) 기어 및 힌지 템플릿 지원
+- [x] **11.4 원클릭 슬라이서 패키저 & 프린터 팜 연동**
+  - [x] Bambu Studio / OrcaSlicer / Cura 호환 멀티 플레이트 3MF 컨테이너 패키징
+  - [x] 학교 메이커스페이스 3D 프린터 원격 전송(OctoPrint / Moonraker API) 규격 연동
+- 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-30_phase11_snap_to_print_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-30_phase11_snap_to_print_construction.md)
 
 

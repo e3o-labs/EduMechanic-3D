@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { MechanicalPreset, DrawerTabType, PinItem, CommentData } from '../types';
+import { MechanicalPreset, DrawerTabType, PinItem, CommentData, MakerParams } from '../types';
 import { MECHANICAL_PRESETS } from '../data/presets';
+
 
 export interface UserProfile {
   id?: string;
@@ -36,8 +37,10 @@ interface State {
   isPortfolioModalOpen: boolean;
   isTeacherModalOpen: boolean;
   locale: 'ko' | 'en' | 'ja';
+  makerParams: MakerParams;
 
   setLocale: (lang: 'ko' | 'en' | 'ja') => void;
+  updateMakerParams: (params: Partial<MakerParams>) => void;
   setActivePreset: (presetId: string) => void;
   setCustomPreset: (preset: MechanicalPreset) => void;
   setActiveTab: (tab: DrawerTabType) => void;
@@ -61,6 +64,7 @@ interface State {
   loadSavedCard: (cardId: string) => Promise<boolean>;
 }
 
+
 export const useStore = create<State>((set, get) => ({
   currentUser: {
     name: '김민준',
@@ -83,10 +87,22 @@ export const useStore = create<State>((set, get) => ({
   isPortfolioModalOpen: false,
   isTeacherModalOpen: false,
   locale: 'ko',
+  makerParams: {
+    teethCount: 20,
+    shaftDiameter: 6.0,
+    appliedTolerance: 0.25,
+    tolerancePreset: 'standard_prusa',
+    cotsMount: '608zz',
+    isMicroPrint: false,
+    showPrintabilityHeatmap: false,
+  },
 
   setLocale: (lang) => set({ locale: lang }),
+  updateMakerParams: (params) =>
+    set((state) => ({ makerParams: { ...state.makerParams, ...params } })),
 
   setActivePreset: (presetId) => {
+
     const found = MECHANICAL_PRESETS.find((p) => p.id === presetId);
     if (found) {
       set({

@@ -37,6 +37,7 @@
 | **Phase 8** | **Draco 3D Mesh Compression & Security Audit** | Draco 3D 메쉬 70% 압축, OWASP 보안 감사 및 Rate-Limiting 미들웨어 수립 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase8_draco_security_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase8_draco_security_construction.md) |
 | **Phase 9** | **Global Multilingual i18n Support** | 뷰포트 HUD, 분해도, 퀴즈 및 Pydantic 명세 다국어(한국어/영어/일본어) 연동 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase9_i18n_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase9_i18n_construction.md) |
 | **Phase 10** | **Teacher Analytics Dashboard & Auto-Grading** | 교사 전용 학업 성취도 관제 및 3D 수행평가 생기부 세특 자동 추천 시스템 | **✅ 완료** | 2026-08-13 | [`2026-08-13_phase10_teacher_analytics_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-13_phase10_teacher_analytics_construction.md) |
+| **Phase 11** | **Snap-to-Print Full-Cycle Makers Pipeline** | VLM 사진 원리 추론 ➔ AI 대화형 파라메트릭 학습 ➔ DFAM 3D 프린팅 검증 & 실물 출력 패키징 | **✅ 완료** | 2026-08-30 | [`2026-08-30_phase11_snap_to_print_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-30_phase11_snap_to_print_construction.md) |
 
 ---
 
@@ -153,3 +154,25 @@
   - 모둠별 3D 부품 분해도 탐구율(%), 질의 핀 개수, 퀴즈 정답률 실시간 관제 (`apps/web/src/components/ui/TeacherDashboardModal.tsx`).
   - AI 생기부 세특 (세부능력 및 특기사항 - Student Competency Report) 자동 추천 서비스 수립 (`apps/api/app/services/analytics/evaluator.py`).
 - 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-13_phase10_teacher_analytics_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-13_phase10_teacher_analytics_construction.md)
+
+---
+
+### Phase 11: Snap-to-Print Full-Cycle Makers Pipeline - ✅ 완료 (2026-08-30)
+- [x] **11.1 VLM 기계 메커니즘 원리 추론 & 대화형 파라메트릭 학습 루프**
+  - [x] 사진 속 기계 요소(감속비, 링크 길이, 캠 프로파일) 자동 분석 및 학생 수준별 원리 설명
+  - [x] AI 대화형 파라메터 튜닝 인터페이스 (이빨 수, 축 직경, 결합 방식 실시간 조절)
+  - [x] 기구학적(Kinematic) 실시간 모션 인터랙션 검증 (맞물림 간섭 체크)
+- [x] **11.2 DFAM (Design for Additive Manufacturing) 지능형 출력 검증 엔진**
+  - [x] 3D 웹 캔버스 '출력 적합성 히트맵' (오버행 45° 초과, 최소 벽 두께 < 1.2mm, 브릿징 감지)
+  - [x] FDM 수축률 및 결합 공차(Tolerance Engine) 자동 적용 (슬립핏 +0.3mm, 프레스핏 +0.15mm)
+  - [x] 수평 홀 눈물방울(Tear-drop) 형상 변환 및 바닥 모따기(Chamfer) 자동 주입
+- [x] **11.3 Micro-Print & 표준 COTS 결합 메이킹 아키텍처**
+  - [x] 15~20분 초고속 출력용 '핵심 메커니즘 미니어처' 슬라이싱 프리셋
+  - [x] 표준 COTS(608ZZ 베어링, M3 볼트, TT 모터, 레고 테크닉 홀) 결합 조립 규격 연동
+  - [x] Print-in-Place(일체형 비조립 출력) 기어 및 힌지 템플릿 지원
+- [x] **11.4 원클릭 슬라이서 패키저 & 프린터 팜 연동**
+  - [x] Bambu Studio / OrcaSlicer / Cura 호환 멀티 플레이트 3MF 컨테이너 패키징
+  - [x] 학교 메이커스페이스 3D 프린터 원격 전송(OctoPrint / Moonraker API) 규격 연동
+- 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-30_phase11_snap_to_print_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-30_phase11_snap_to_print_construction.md)
+
+

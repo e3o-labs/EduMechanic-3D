@@ -113,41 +113,61 @@ export function createHelicalCutterGeometry(
 }
 
 /**
- * Generates Stationary Internal Ring Gear (내치 기어) for Sharpener Body.
+ * Generates Stationary Internal Ring Gear (내치 기어) with exact ISO module geometry.
+ * Tooth tip points inwards: rTip = rPitch - 1.0*m, rRoot = rPitch + 1.25*m.
  */
 export function createInternalRingGearGeometry(
-  innerRadius: number = 7.0,
-  outerRadius: number = 9.5,
+  module: number = 1.2,
   teethCount: number = 24,
+  rimThickness: number = 3.5,
   depth: number = 4.0
 ): THREE.BufferGeometry {
+  const m = module;
+  const z = teethCount;
+  const rPitch = (m * z) / 2.0;
+  const rTip = rPitch - 1.0 * m; // Inward facing tooth peak
+  const rRoot = rPitch + 1.25 * m; // Inward facing tooth root
+  const rOuterRim = rRoot + rimThickness;
+
   const shape = new THREE.Shape();
-  shape.absarc(0, 0, outerRadius, 0, Math.PI * 2, false);
+  // Outer circular rim
+  shape.absarc(0, 0, rOuterRim, 0, Math.PI * 2, false);
 
+  // Inner cutout with internal involute teeth
   const hole = new THREE.Path();
-  const anglePerTooth = (2 * Math.PI) / teethCount;
-  const toothDepth = (outerRadius - innerRadius) * 0.35;
+  const anglePerTooth = (2 * Math.PI) / z;
+  const halfTooth = (Math.PI / z) / 2;
 
-  for (let i = 0; i < teethCount; i++) {
-    const a = i * anglePerTooth;
-    const da = anglePerTooth / 4;
-    const r1 = innerRadius;
-    const r2 = innerRadius - toothDepth;
+  for (let i = 0; i < z; i++) {
+    const angle = i * anglePerTooth;
+    // Internal tooth profile (pointing inwards)
+    const a1 = angle - halfTooth * 1.5;
+    const a2 = angle - halfTooth * 0.9;
+    const a3 = angle - halfTooth * 0.5;
+    const a4 = angle + halfTooth * 0.5;
+    const a5 = angle + halfTooth * 0.9;
+    const a6 = angle + halfTooth * 1.5;
 
-    const x1 = r1 * Math.cos(a - da);
-    const y1 = r1 * Math.sin(a - da);
-    const x2 = r2 * Math.cos(a - da * 0.5);
-    const y2 = r2 * Math.sin(a - da * 0.5);
-    const x3 = r2 * Math.cos(a + da * 0.5);
-    const y3 = r2 * Math.sin(a + da * 0.5);
-    const x4 = r1 * Math.cos(a + da);
-    const y4 = r1 * Math.sin(a + da);
+    const x1 = rRoot * Math.cos(a1);
+    const y1 = rRoot * Math.sin(a1);
+    const x2 = rPitch * Math.cos(a2);
+    const y2 = rPitch * Math.sin(a2);
+    const x3 = rTip * Math.cos(a3);
+    const y3 = rTip * Math.sin(a3);
+    const x4 = rTip * Math.cos(a4);
+    const y4 = rTip * Math.sin(a4);
+    const x5 = rPitch * Math.cos(a5);
+    const y5 = rPitch * Math.sin(a5);
+    const x6 = rRoot * Math.cos(a6);
+    const y6 = rRoot * Math.sin(a6);
 
     if (i === 0) hole.moveTo(x1, y1);
     else hole.lineTo(x1, y1);
     hole.lineTo(x2, y2);
     hole.lineTo(x3, y3);
     hole.lineTo(x4, y4);
+    hole.lineTo(x5, y5);
+    hole.lineTo(x6, y6);
   }
   hole.closePath();
   shape.holes.push(hole);
@@ -156,6 +176,7 @@ export function createInternalRingGearGeometry(
   geom.center();
   return geom;
 }
+
 
 /**
  * Generates Hexagonal Standard Pencil.

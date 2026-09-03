@@ -125,3 +125,75 @@ export function getPlanetaryUnitParams(m: number, zSun: number, zPlanet: number,
     planetPhaseOffsets,
   };
 }
+
+/**
+ * 20-degree Involute Line of Action (작용선) and Contact Normal Force Vector
+ */
+export interface LineOfActionData {
+  pitchPoint: [number, number, number];
+  startPoint: [number, number, number];
+  endPoint: [number, number, number];
+  contactPoint: [number, number, number];
+  normalForceVector: [number, number, number];
+  normalForceMagnitude: number; // Newtons
+}
+
+export function computeLineOfAction(
+  pitchRadius1: number,
+  pitchRadius2: number,
+  driveTorqueNmm: number,
+  toothPhase: number,
+  pressureAngleDeg: number = 20.0
+): LineOfActionData {
+  const alpha = (pressureAngleDeg * Math.PI) / 180.0;
+  // Pitch Point along Y-axis (between two centers at Y=0 and Y=pitchRadius1+pitchRadius2)
+  const py = pitchRadius1;
+  const pitchPoint: [number, number, number] = [0, py, 0];
+
+  // Base radii
+  const rb1 = pitchRadius1 * Math.cos(alpha);
+  const rb2 = pitchRadius2 * Math.cos(alpha);
+
+  // Line of Action length: path of contact
+  const pathLength = (pitchRadius1 + pitchRadius2) * Math.sin(alpha) * 0.85;
+
+  // Tangent and Normal direction components with 20-deg incline
+  const dx = Math.cos(alpha);
+  const dz = Math.sin(alpha);
+
+  const startPoint: [number, number, number] = [
+    -pathLength * 0.5 * dx,
+    py,
+    -pathLength * 0.5 * dz,
+  ];
+  const endPoint: [number, number, number] = [
+    pathLength * 0.5 * dx,
+    py,
+    pathLength * 0.5 * dz,
+  ];
+
+  // Moving Contact Point oscillates along the Line of Action
+  const s = Math.sin(toothPhase * 2.0);
+  const contactPoint: [number, number, number] = [
+    s * pathLength * 0.45 * dx,
+    py,
+    s * pathLength * 0.45 * dz,
+  ];
+
+  // Normal Force Fn = Torque / (rb1) in Newtons (N)
+  const fnN = rb1 > 0 ? (driveTorqueNmm / rb1) : 0.0;
+  const normalForceVector: [number, number, number] = [
+    dx * Math.min(fnN, 50.0) * 0.3,
+    0,
+    dz * Math.min(fnN, 50.0) * 0.3,
+  ];
+
+  return {
+    pitchPoint,
+    startPoint,
+    endPoint,
+    contactPoint,
+    normalForceVector,
+    normalForceMagnitude: fnN,
+  };
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
@@ -9,7 +9,10 @@ import { PinOverlay } from './PinOverlay';
 import { useStore } from '../../store/useStore';
 import { TouchToolbar } from '../ui/TouchToolbar';
 import { VoiceTutorButton } from '../ui/VoiceTutorButton';
+import { PhysicsTelemetryHUD } from '../ui/PhysicsTelemetryHUD';
+import { DynamicState } from '../../utils/physicsEngine';
 import { ChevronRight, Box, Camera, Eye } from 'lucide-react';
+
 
 export function CanvasViewport() {
   const activePreset = useStore((s) => s.activePreset);
@@ -20,6 +23,20 @@ export function CanvasViewport() {
   const isScanning = useStore((s) => s.isScanning);
   const scanningThumb = useStore((s) => s.scanningThumb);
   const setPresetModalOpen = useStore((s) => s.setPresetModalOpen);
+
+  const [telemetryState, setTelemetryState] = useState<DynamicState>({
+    theta: 0,
+    omega: 0,
+    alpha: 0,
+    rpm: 0,
+    torqueIn: 0,
+    torqueDrag: 0,
+    torqueLoad: 0,
+    powerMilliwatts: 0,
+    kineticEnergyMilliJoules: 0,
+    equilibriumRatio: 0,
+  });
+  const [showForces, setShowForces] = useState(true);
 
   const controlsRef = useRef<OrbitControlsImpl>(null);
 
@@ -53,7 +70,10 @@ export function CanvasViewport() {
           <directionalLight position={[-20, -10, -20]} intensity={0.4} color="#38bdf8" />
           <gridHelper args={[60, 30, '#94a3b8', '#cbd5e1']} position={[0, -8, 0]} />
 
-          <MechanismModel />
+          <MechanismModel
+            onTelemetryUpdate={setTelemetryState}
+            showForceVectors={showForces}
+          />
           <PinOverlay />
 
           <OrbitControls
@@ -64,6 +84,15 @@ export function CanvasViewport() {
           />
         </Canvas>
       </div>
+
+      {/* REAL-TIME DYNAMICS TELEMETRY HUD */}
+      <PhysicsTelemetryHUD
+        state={telemetryState}
+        showForces={showForces}
+        onToggleForces={() => setShowForces(!showForces)}
+        presetTitle={activePreset.title}
+      />
+
 
       {/* AI SCANNING ANIMATION OVERLAY */}
       {isScanning && (

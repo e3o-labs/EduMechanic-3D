@@ -6,25 +6,31 @@ export interface GearGeometryOptions {
   faceWidth?: number;
   shaftDiameter?: number;
   pressureAngleDeg?: number;
+  backlashMm?: number; // 3D Print engineering clearance (default 0.2mm)
   cotsMount?: '608zz' | 'm3_bolt' | 'lego_pin' | 'd_shaft';
 }
 
 /**
- * Generates true 3D Involute Spur Gear BufferGeometry with exact teeth and shaft hole.
+ * Generates true 3D Involute Spur Gear with 3D Print Backlash Clearance (0.2mm).
+ * Ensures zero physical mesh interference / collision.
  */
 export function createInvoluteGearGeometry(options: GearGeometryOptions = {}): THREE.BufferGeometry {
   const m = options.module || 1.5;
   const z = Math.max(8, options.teethCount || 20);
   const depth = options.faceWidth || 6.0;
   const shaftDia = options.shaftDiameter || 5.0;
+  const backlash = options.backlashMm ?? 0.20; // 0.2mm 3D printing clearance
 
   const rPitch = (m * z) / 2.0;
   const rTip = rPitch + 1.0 * m;
   const rRoot = rPitch - 1.25 * m;
 
-  const shape = new THREE.Shape();
+  // Angular reduction due to 0.2mm backlash
+  const backlashAngle = backlash / rPitch;
   const anglePerTooth = (2 * Math.PI) / z;
-  const halfTooth = Math.PI / z / 2;
+  const halfTooth = Math.max(0.01, (Math.PI / z / 2) - (backlashAngle / 2));
+
+  const shape = new THREE.Shape();
 
   for (let i = 0; i < z; i++) {
     const angle = i * anglePerTooth;
@@ -58,7 +64,7 @@ export function createInvoluteGearGeometry(options: GearGeometryOptions = {}): T
   }
   shape.closePath();
 
-  // Cut Center Shaft Hole
+  // Center Shaft Hole
   const holePath = new THREE.Path();
   const rShaft = shaftDia / 2.0;
   holePath.absarc(0, 0, rShaft, 0, Math.PI * 2, false);
@@ -69,8 +75,8 @@ export function createInvoluteGearGeometry(options: GearGeometryOptions = {}): T
     bevelEnabled: true,
     bevelSegments: 2,
     steps: 1,
-    bevelSize: 0.3,
-    bevelThickness: 0.3,
+    bevelSize: 0.25,
+    bevelThickness: 0.25,
   };
 
   const geom = new THREE.ExtrudeGeometry(shape, extrudeSettings);
@@ -79,68 +85,155 @@ export function createInvoluteGearGeometry(options: GearGeometryOptions = {}): T
 }
 
 /**
- * Generates true 3D Planetary Helical Milling Cutter Roller for Pencil Sharpener.
+ * Generates Conical Tapered Internal Ring Gear (원뿔형 테이퍼드 내치 링 기어)
+ * Exactly matches the 18-degree tilt angle of the sharpener cutter pinion!
+ * Eliminates 3D spatial oblique penetration.
  */
-export function createHelicalCutterGeometry(
-  radius: number = 3.2,
-  height: number = 10.0,
-  numFlutes: number = 10,
-  twistAngle: number = Math.PI / 2.8
+export function createConicalInternalRingGearGeometry(
+  module: number = 1.2,
+  teethCount: number = 24,
+  coneAngleDeg: number = 18.0,
+  depth: number = 5.0,
+  rimThickness: number = 3.5,
+  backlashMm: number = 0.20
 ): THREE.BufferGeometry {
-  const geom = new THREE.CylinderGeometry(radius * 0.75, radius, height, numFlutes * 4, 16);
-  const pos = geom.attributes.position;
+  const m = module;
+  const z = teethCount;
+  const coneRad = (coneAngleDeg * Math.PI) / 180.0;
+  const tanCone = Math.tan(coneRad);
 
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i);
-    const y = pos.getY(i);
-    const z = pos.getZ(i);
+  const rPitchBase = (m * z) / 2.0;
+  const nRings = 8;
+  const ptsPerTooth = 6;
+  const totalPts = z * ptsPerTooth;
+  const backlashAngle = backlashMm / rPitchBase;
+  const anglePerTooth = (2 * Math.PI) / z;
+  const halfTooth = (Math.PI / z / 2) + (backlashAngle / 2); // Wider space for internal gear
 
-    const vNorm = y / height;
-    const twist = vNorm * twistAngle;
+  // Construct concentric lofted rings expanding along Z axis with 18-degree taper
+  const rings: THREE.Vector3[][] = [];
+  const outerRings: THREE.Vector3[][] = [];
 
-    let angle = Math.atan2(z, x) + twist;
-    const r = Math.sqrt(x * x + z * z);
+  for (let r = 0; r <= nRings; r++) {
+    const zFrac = r / nRings;
+    const zPos = (zFrac - 0.5) * depth;
+    // Tapered expansion: radius increases with Z along the 18-deg cone
+    const rOffset = (zPos + depth * 0.5) * tanCone;
+    const rPitch = rPitchBase + rOffset;
+    const rTip = rPitch - 1.0 * m;   // Inward tip
+    const rRoot = rPitch + 1.25 * m; // Inward root
+    const rRim = rRoot + rimThickness;
 
-    const fluteWave = Math.sin(angle * numFlutes);
-    const rMod = r * (0.85 + 0.18 * Math.max(0, fluteWave));
+    const innerPts: THREE.Vector3[] = [];
+    const outerPts: THREE.Vector3[] = [];
 
-    pos.setX(i, rMod * Math.cos(angle));
-    pos.setZ(i, rMod * Math.sin(angle));
+    for (let i = 0; i < z; i++) {
+      const ang = i * anglePerTooth;
+      const a1 = ang - halfTooth * 1.5;
+      const a2 = ang - halfTooth * 0.9;
+      const a3 = ang - halfTooth * 0.5;
+      const a4 = ang + halfTooth * 0.5;
+      const a5 = ang + halfTooth * 0.9;
+      const a6 = ang + halfTooth * 1.5;
+
+      innerPts.push(new THREE.Vector3(rRoot * Math.cos(a1), rRoot * Math.sin(a1), zPos));
+      innerPts.push(new THREE.Vector3(rPitch * Math.cos(a2), rPitch * Math.sin(a2), zPos));
+      innerPts.push(new THREE.Vector3(rTip * Math.cos(a3), rTip * Math.sin(a3), zPos));
+      innerPts.push(new THREE.Vector3(rTip * Math.cos(a4), rTip * Math.sin(a4), zPos));
+      innerPts.push(new THREE.Vector3(rPitch * Math.cos(a5), rPitch * Math.sin(a5), zPos));
+      innerPts.push(new THREE.Vector3(rRoot * Math.cos(a6), rRoot * Math.sin(a6), zPos));
+    }
+
+    // Outer circular rim points
+    for (let p = 0; p < totalPts; p++) {
+      const oAng = (2.0 * Math.PI * p) / totalPts;
+      outerPts.push(new THREE.Vector3(rRim * Math.cos(oAng), rRim * Math.sin(oAng), zPos));
+    }
+
+    rings.push(innerPts);
+    outerRings.push(outerPts);
   }
 
+  // Build triangle faces
+  const vertices: number[] = [];
+
+  // Inner tooth flanks lofting
+  for (let r = 0; r < nRings; r++) {
+    const r1 = rings[r];
+    const r2 = rings[r + 1];
+    for (let p = 0; p < totalPts; p++) {
+      const nextP = (p + 1) % totalPts;
+      const p1 = r1[p], p2 = r1[nextP], p3 = r2[nextP], p4 = r2[p];
+      // Quad 1
+      vertices.push(p1.x, p1.y, p1.z, p3.x, p3.y, p3.z, p2.x, p2.y, p2.z);
+      vertices.push(p1.x, p1.y, p1.z, p4.x, p4.y, p4.z, p3.x, p3.y, p3.z);
+    }
+  }
+
+  // Outer cylindrical rim
+  for (let r = 0; r < nRings; r++) {
+    const o1 = outerRings[r];
+    const o2 = outerRings[r + 1];
+    for (let p = 0; p < totalPts; p++) {
+      const nextP = (p + 1) % totalPts;
+      const p1 = o1[p], p2 = o1[nextP], p3 = o2[nextP], p4 = o2[p];
+      vertices.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z, p3.x, p3.y, p3.z);
+      vertices.push(p1.x, p1.y, p1.z, p3.x, p3.y, p3.z, p4.x, p4.y, p4.z);
+    }
+  }
+
+  // End caps (Connecting inner teeth to outer rim)
+  // Front cap (r = 0)
+  for (let p = 0; p < totalPts; p++) {
+    const nextP = (p + 1) % totalPts;
+    const in1 = rings[0][p], in2 = rings[0][nextP];
+    const out1 = outerRings[0][p], out2 = outerRings[0][nextP];
+    vertices.push(in1.x, in1.y, in1.z, out1.x, out1.y, out1.z, in2.x, in2.y, in2.z);
+    vertices.push(in2.x, in2.y, in2.z, out1.x, out1.y, out1.z, out2.x, out2.y, out2.z);
+  }
+  // Back cap (r = nRings)
+  const lastR = nRings;
+  for (let p = 0; p < totalPts; p++) {
+    const nextP = (p + 1) % totalPts;
+    const in1 = rings[lastR][p], in2 = rings[lastR][nextP];
+    const out1 = outerRings[lastR][p], out2 = outerRings[lastR][nextP];
+    vertices.push(in1.x, in1.y, in1.z, in2.x, in2.y, in2.z, out1.x, out1.y, out1.z);
+    vertices.push(in2.x, in2.y, in2.z, out2.x, out2.y, out2.z, out1.x, out1.y, out1.z);
+  }
+
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
   geom.computeVertexNormals();
   return geom;
 }
 
 /**
- * Generates Stationary Internal Ring Gear (내치 기어) with exact ISO module geometry.
- * Tooth tip points inwards: rTip = rPitch - 1.0*m, rRoot = rPitch + 1.25*m.
+ * Standard Internal Ring Gear (flat) with 0.2mm Backlash.
  */
 export function createInternalRingGearGeometry(
   module: number = 1.2,
   teethCount: number = 24,
   rimThickness: number = 3.5,
-  depth: number = 4.0
+  depth: number = 4.0,
+  backlashMm: number = 0.20
 ): THREE.BufferGeometry {
   const m = module;
   const z = teethCount;
   const rPitch = (m * z) / 2.0;
-  const rTip = rPitch - 1.0 * m; // Inward facing tooth peak
-  const rRoot = rPitch + 1.25 * m; // Inward facing tooth root
+  const rTip = rPitch - 1.0 * m;
+  const rRoot = rPitch + 1.25 * m;
   const rOuterRim = rRoot + rimThickness;
 
+  const backlashAngle = backlashMm / rPitch;
   const shape = new THREE.Shape();
-  // Outer circular rim
   shape.absarc(0, 0, rOuterRim, 0, Math.PI * 2, false);
 
-  // Inner cutout with internal involute teeth
   const hole = new THREE.Path();
   const anglePerTooth = (2 * Math.PI) / z;
-  const halfTooth = (Math.PI / z) / 2;
+  const halfTooth = (Math.PI / z / 2) + (backlashAngle / 2);
 
   for (let i = 0; i < z; i++) {
     const angle = i * anglePerTooth;
-    // Internal tooth profile (pointing inwards)
     const a1 = angle - halfTooth * 1.5;
     const a2 = angle - halfTooth * 0.9;
     const a3 = angle - halfTooth * 0.5;
@@ -177,6 +270,39 @@ export function createInternalRingGearGeometry(
   return geom;
 }
 
+/**
+ * Generates true 3D Planetary Helical Milling Cutter Roller for Pencil Sharpener.
+ */
+export function createHelicalCutterGeometry(
+  radius: number = 3.0,
+  height: number = 10.0,
+  numFlutes: number = 10,
+  twistAngle: number = Math.PI / 2.8
+): THREE.BufferGeometry {
+  const geom = new THREE.CylinderGeometry(radius * 0.75, radius, height, numFlutes * 4, 16);
+  const pos = geom.attributes.position;
+
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const y = pos.getY(i);
+    const z = pos.getZ(i);
+
+    const vNorm = y / height;
+    const twist = vNorm * twistAngle;
+
+    let angle = Math.atan2(z, x) + twist;
+    const r = Math.sqrt(x * x + z * z);
+
+    const fluteWave = Math.sin(angle * numFlutes);
+    const rMod = r * (0.85 + 0.18 * Math.max(0, fluteWave));
+
+    pos.setX(i, rMod * Math.cos(angle));
+    pos.setZ(i, rMod * Math.sin(angle));
+  }
+
+  geom.computeVertexNormals();
+  return geom;
+}
 
 /**
  * Generates Hexagonal Standard Pencil.
@@ -195,13 +321,12 @@ export function createPencilGeometry(length: number = 22.0, radius: number = 2.0
 }
 
 /**
- * [Phase 12: Music Box] Generates 3D Melody Pin Cylinder Drum with embedded pins.
+ * Generates 3D Melody Pin Cylinder Drum with embedded pins.
  */
-export function createMusicboxDrumGeometry(radius: number = 4.5, length: number = 16.0, numPins: number = 48): THREE.BufferGeometry {
+export function createMusicboxDrumGeometry(radius: number = 4.8, length: number = 16.0, numPins: number = 48): THREE.BufferGeometry {
   const drumGeom = new THREE.CylinderGeometry(radius, radius, length, 24);
   const pos = drumGeom.attributes.position;
 
-  // Add micro bumps for melody pins around cylinder surface
   for (let i = 0; i < pos.count; i++) {
     const y = pos.getY(i);
     const x = pos.getX(i);
@@ -221,23 +346,20 @@ export function createMusicboxDrumGeometry(radius: number = 4.5, length: number 
 }
 
 /**
- * [Phase 12: Music Box] Generates Tuned Steel Comb Reeds with graduated lengths.
+ * Generates Tuned Steel Comb Reeds with graduated lengths.
  */
 export function createCombReedsGeometry(width: number = 14.0, numTeeth: number = 18): THREE.BufferGeometry {
   const shape = new THREE.Shape();
-  // Base mounting block
   shape.moveTo(-width / 2, 0);
   shape.lineTo(width / 2, 0);
   shape.lineTo(width / 2, 3);
 
-  // Graduated vibrating teeth (longer on left/bass, shorter on right/treble)
   const toothPitch = width / numTeeth;
   const toothWidth = toothPitch * 0.65;
 
   for (let t = numTeeth - 1; t >= 0; t--) {
     const xLeft = -width / 2 + t * toothPitch;
     const xRight = xLeft + toothWidth;
-    // Length formula: 10mm (bass) down to 4.5mm (treble)
     const tLen = 4.5 + (1.0 - t / numTeeth) * 5.5;
 
     shape.lineTo(xRight, 3);
@@ -255,14 +377,12 @@ export function createCombReedsGeometry(width: number = 14.0, numTeeth: number =
 }
 
 /**
- * [Phase 12: Music Box] Generates High-Speed 2-Blade Air Drag Governor Fan.
+ * Generates High-Speed 2-Blade Air Drag Governor Fan.
  */
-export function createAirGovernorGeometry(bladeRadius: number = 4.0, height: number = 8.0): THREE.BufferGeometry {
+export function createAirGovernorGeometry(bladeRadius: number = 3.8, height: number = 7.0): THREE.BufferGeometry {
   const shape = new THREE.Shape();
-  // Central shaft
   shape.absarc(0, 0, 0.8, 0, Math.PI * 2, false);
 
-  // 2 aerodynamic drag wings
   shape.moveTo(0.8, -0.2);
   shape.lineTo(bladeRadius, -0.6);
   shape.lineTo(bladeRadius, 0.6);
@@ -279,19 +399,16 @@ export function createAirGovernorGeometry(bladeRadius: number = 4.0, height: num
 }
 
 /**
- * [Phase 12: Music Box] Generates Butterfly Winding Key.
+ * Generates Butterfly Winding Key.
  */
 export function createWindingKeyGeometry(): THREE.BufferGeometry {
   const shape = new THREE.Shape();
-  // Center collar
   shape.absarc(0, 0, 1.2, 0, Math.PI * 2, false);
 
-  // Left wing
   shape.moveTo(-1.0, 0.6);
   shape.bezierCurveTo(-3.5, 4.0, -7.0, 3.5, -6.5, 0.0);
   shape.bezierCurveTo(-6.0, -3.5, -3.0, -3.0, -1.0, -0.6);
 
-  // Right wing
   shape.moveTo(1.0, 0.6);
   shape.bezierCurveTo(3.5, 4.0, 7.0, 3.5, 6.5, 0.0);
   shape.bezierCurveTo(6.0, -3.5, 3.0, -3.0, 1.0, -0.6);

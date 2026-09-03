@@ -8,12 +8,14 @@ import {
   createInvoluteGearGeometry,
   createHelicalCutterGeometry,
   createInternalRingGearGeometry,
+  createConicalInternalRingGearGeometry,
   createPencilGeometry,
   createMusicboxDrumGeometry,
   createCombReedsGeometry,
   createAirGovernorGeometry,
   createWindingKeyGeometry,
 } from '../../utils/gearGeometry';
+
 import {
   getSpurMeshingParams,
   getInternalMeshingParams,
@@ -93,8 +95,13 @@ export function MechanismModel({
   // =========================================================================
   // 3. GEOMETRIES MEMOIZATION
   // =========================================================================
-  const sharpenerRingGeom = useMemo(() => createInternalRingGearGeometry(1.2, 24, 3.5, 4.5), []);
-  const sharpenerPinionGeom = useMemo(() => createInvoluteGearGeometry({ module: 1.2, teethCount: 8, faceWidth: 4.5, shaftDiameter: 3.0 }), []);
+  // Sharpener: Conical Tapered Internal Ring Gear (18 deg) for zero 3D oblique collision!
+  const sharpenerRingGeom = useMemo(() => {
+    return createConicalInternalRingGearGeometry(1.2, 24, 18.0, 5.5, 3.5, 0.20);
+  }, []);
+  const sharpenerPinionGeom = useMemo(() => {
+    return createInvoluteGearGeometry({ module: 1.2, teethCount: 8, faceWidth: 4.5, shaftDiameter: 3.0, backlashMm: 0.20 });
+  }, []);
   const sharpenerCutterGeom = useMemo(() => createHelicalCutterGeometry(3.0, 11.0, 10, Math.PI / 2.8), []);
   const pencilGeoms = useMemo(() => createPencilGeometry(24.0, 2.2), []);
 

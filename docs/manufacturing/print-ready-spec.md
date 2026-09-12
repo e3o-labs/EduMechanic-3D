@@ -1,114 +1,154 @@
-# EduMechanic Classroom FDM 3D Printing Specification (v1.0)
+# EduMechanic Classroom FDM 3D Printing Specification (v1.1)
 
-## 1. 개요 (Overview)
-본 명세서는 **EduMechanic-3D** 시스템에서 생성된 3D 메커니즘 모델이 일반 교육 현장(초·중·고교 메이커스페이스, 발명교실, 일반 가정)의 보급형 FDM 3D 프린터에서 **실제로 출력 ➔ 조립 ➔ 물리적으로 구동**될 수 있도록 보장하는 엔지니어링 제조 기준선(Manufacturing Baseline)을 정의합니다.
+## 1. 목적과 범위
 
-단순한 3D 시각화나 기하학적 형상(Mesh) 생성을 넘어, 실제 슬라이서 및 적층 제조(Additive Manufacturing) 환경의 물리적 한계(노즐 압출 폭, 열수축, 레이어 간 결합력, 중력에 의한 처짐)를 파라메트릭 CAD 모델링 단계부터 반영합니다.
+이 문서는 EduMechanic-3D가 생성한 기계 부품/조립체를 일반적인 0.4mm 노즐 FDM 환경에 맞게 **계산상 사전 검증(computational prevalidation)**하기 위한 제조 기준선이다.
 
----
+이 기준선은 출력 성공 가능성을 높이기 위한 설계 규칙이지, G1~G4 자동 검사만으로 실물 출력·조립·구동을 보장하는 인증 규격이 아니다. 실제 성공 주장은 `PROJECT_STATE.md`의 증거 등급을 따른다.
 
-## 2. 기본 프린터 및 소재 프로필 (Baseline Hardware & Material)
+- E0: 구현
+- E1: 자동 테스트
+- E2: 독립 계산 검증
+- E3: 실제 출력·조립·구동 1회 검증
+- E4: 여러 장비/조건 반복 검증
 
-### 2.1. 대상 하드웨어 (Target Hardware)
-- **표준 대상 기종**: Bambu Lab A1 / A1 mini / P1P, Prusa MK3S+ / MK4, Creality Ender-3 v2 / v3 KE, Anycubic Kobra 등 보급형 0.4mm 노즐 FDM 프린터
-- **최소 유효 빌드 볼륨 (Build Volume)**: $180\text{ mm} \times 180\text{ mm} \times 180\text{ mm}$ (초소형 베드에서도 출력 분할 없이 일체형/모듈러 출력 보장)
+`Print Ready`라는 기존 enum/호환 명칭이 코드에 남더라도, E3 이전에는 사용자 의미를 **Computationally Prevalidated**로 해석한다.
 
-### 2.2. 소재 및 슬라이스 파라미터 (Material & Slicing Baseline)
-| 항목 | 표준 기준값 | 교육용 허용 범위 | 엔지니어링 근거 및 주의사항 |
-| :--- | :--- | :--- | :--- |
-| **소재 (Filament)** | **PLA (Polylactic Acid)** | PLA, PLA+, PETG | 수축률이 낮고 독성이 없어 학교 교실 환경에 가장 적합. |
-| **노즐 직경 (Nozzle Dia)** | **$0.40\text{ mm}$** | $0.40\text{ mm}$ 단일화 | 전 세계 교육 현장의 95% 이상이 $0.4\text{mm}$ 노즐 채택. |
-| **레이어 높이 (Layer Height)**| **$0.20\text{ mm}$** | $0.16 \sim 0.24\text{ mm}$ | 기어 치형 분해능과 출력 시간의 최적 절충점. |
-| **기본 외벽 두께 (Wall Thick)**| **최소 $1.20\text{ mm}$ (3 외벽)**| $1.2 \sim 1.6\text{ mm}$ | $0.4\text{mm}$ 노즐 $\times 3\text{ perimeters}$. 비구조재 기본. |
-| **하중 지지벽 (Structural Wall)**| **최소 $1.60 \sim 2.00\text{ mm}$** | $1.6 \sim 2.4\text{ mm}$ (4~5 외벽)| 감속 기어 이뿌리(Tooth root), 베어링 포켓, 축 결합부. |
-| **상단/하단 솔리드 레이어**| **최소 5 레이어 ($1.00\text{ mm}$)**| 4~6 레이어 ($0.8 \sim 1.2\text{ mm}$)| 압출 처짐(Pillowing) 방지 및 축 방향 지지 강도 확보. |
-| **내부 채움 (Infill)** | **$25\%$ Gyroid / Grid** | $20\% \sim 35\%$ | 등방성 전단 강도 확보를 위해 자이로이드(Gyroid) 권장. |
+## 2. 기본 프린터/소재 설계 프로필
 
----
+현재 기본값은 특정 프린터의 보증치가 아니라 프로젝트의 시작 profile이다.
 
-## 3. 결합 공차 체계 (Fit Profiles & Tolerances)
+| 항목 | 기본값 | 비고 |
+| --- | ---: | --- |
+| 소재 | PLA | 장비/필라멘트별 calibration 필요 |
+| 노즐 | 0.40 mm | 기본 profile |
+| 레이어 높이 | 0.20 mm | 0.16~0.24 mm 범위 실험 가능 |
+| 기본 벽 두께 목표 | >= 1.20 mm | local wall-thickness 측정 구현 수준을 별도 확인 |
+| 구조부 벽 두께 목표 | >= 1.60 mm | 하중 검증/FEA를 의미하지 않음 |
+| 내부 채움 | 25% | 출력물 특성에 따라 조정 |
+| 기준 build volume | 180 x 180 x 180 mm | baseline envelope |
 
-> [!IMPORTANT]
-> `global_tolerance = 0.20mm`와 같은 일괄 단일 공차 적용은 금지합니다.
-> FDM 출력물의 특성(외경은 팽창하고 홀 내경은 수축하는 Hole Shrinkage 현상)에 맞추어 결합 기능별 공차를 차등 적용해야 합니다.
+## 3. 결합 공차 프로필
 
-### 3.1. 용도별 공차 명세 (Fit Profiles)
-1. **Press Fit (억지 끼워맞춤)**:
-   - **적용 대상**: 608ZZ / 625ZZ 볼베어링 외륜 압입, 고정 핀, 비회전 축 결합.
-   - **설계 간극 (Diametral Clearance)**: $+0.10\text{ mm} \sim +0.14\text{ mm}$
-   - **특성**: 엄지손가락 또는 소형 고무망치로 밀어 넣어 흔들림 없이 완전 고정.
-2. **Snug Fit (중간/타이트 끼워맞춤)**:
-   - **적용 대상**: M3 육각 너트 포켓, 분리 가능한 조립 핀, 위치 결정 다월.
-   - **설계 간극**: $+0.18\text{ mm} \sim +0.22\text{ mm}$
-   - **특성**: 별도의 공구 없이 손으로 밀어 넣고 탈착 가능.
-3. **Sliding Fit (미끄럼 끼워맞춤)**:
-   - **적용 대상**: 크랭크 슬라이더 가이드 레일, 신축 링크.
-   - **설계 간극**: $+0.28\text{ mm} \sim +0.32\text{ mm}$
-   - **특성**: 덜컹거림(Play)을 최소화하면서 1차원 직선 운동이 부드럽게 작동.
-4. **Rotating Fit (회전 틈새 끼워맞춤)**:
-   - **적용 대상**: 베어링 없는 플라스틱-플라스틱 회전축, 프레임 관통 축 부싱 홀.
-   - **설계 간극**: $+0.35\text{ mm} \sim +0.42\text{ mm}$
-   - **특성**: FDM 레이어 적층면의 미세 마찰 요철을 극복하고 매끄러운 자중/수동 회전 보장.
-5. **Gear Tooth Backlash (기어 치면 백래시)**:
-   - **설계 기준값**: **최소 $0.25\text{ mm} \sim 0.30\text{ mm}$**
-   - **적용 방식**: 피치원 상 치두께($s$)를 공칭 치두께($\frac{\pi m}{2}$)에서 $\Delta s = \text{backlash}$ 만큼 차감하여 치형 생성.
+단일 `global_tolerance`를 모든 결합에 적용하지 않는다. 아래 값은 프로젝트 시작점이며 프린터/소재별 calibration coupon 결과로 보정될 수 있다.
 
----
+| Fit type | 기본 diametral clearance |
+| --- | ---: |
+| Press fit | +0.12 mm |
+| Snug fit | +0.20 mm |
+| Sliding fit | +0.30 mm |
+| Rotating fit | +0.38 mm |
+| Gear tooth backlash | 0.25 mm |
 
-## 4. 서포트리스(Support-Free) 및 DFAM 설계 규칙
+### 적용 원칙
 
-1. **최대 오버행 각도 (Max Overhang Angle)**:
-   - Z축 수직선 기준 최대 **$45.0^\circ$** 초과 금지.
-   - $45^\circ$ 이상의 경사면은 챔퍼(Chamfer) 또는 필렛(Fillet)으로 자체 지지형(Self-supporting) 형상화.
-2. **수평 홀 티어드롭 (Horizontal Hole Teardrop)**:
-   - 지름 $5.0\text{ mm}$ 이상의 수평 출력 관통 홀은 상단 정점에 $45^\circ$ 각도의 눈물방울(Teardrop) 아치를 적용하여 서포트 없이 원형 단면 보존.
-3. **코끼리발 방지 챔퍼 (Anti-Elephant's Foot Chamfer)**:
-   - 히팅 베드와 접촉하는 최하단 바닥면 에지에는 **$0.80\text{ mm} \times 45^\circ$** 외경 모따기를 자동 적용하여 첫 레이어 과압출(Squish)로 인한 치수 팽창 및 기어 씹힘 방지.
-4. **최소 피처 및 브릿지 (Minimum Feature & Bridge)**:
-   - 최소 양각 형상(Embossing): 폭 $0.80\text{ mm}$ 이상, 높이 $0.60\text{ mm}$ 이상.
-   - 최대 허용 수평 브릿지 길이: $15.0\text{ mm}$ (냉각 팬 100% 가동 조건).
+- 외경/홀 치수 오차는 방향이 다를 수 있으므로 기능별 공차를 둔다.
+- 베어링/축/핀 같은 COTS 결합은 실제 부품 치수와 출력 calibration을 우선한다.
+- 자동 검사 통과가 실제 마찰계수나 장기간 마모 성능을 검증하지는 않는다.
 
----
+## 4. DFAM 기본 규칙
 
-## 5. 모델 신뢰도 3등급 체계 (Print Readiness Tiers)
+현재 자동화에서 사용할 설계 기준:
 
-| 등급 | 코드명 | 정의 및 조건 | 출력 가능 여부 | 사용자 액션 가이드 |
-| :---: | :---: | :--- | :---: | :--- |
-| **Tier 1** | **`Concept`** | - 사진 단 한 장 또는 아이디어 텍스트 기반 VLM 추론 상태.<br>- 절대 치수 미확정, 부품 간 정밀 간극 미검증. | **출력 불가**<br>(Print Blocked) | "교육용 3D 시각화 및 원리 탐구용 모델입니다. 출력을 원하시면 기준 치수를 입력해 주세요." |
-| **Tier 2** | **`Prototype`** | - 기준 큐브, 실측 축 직경 또는 다각도 사진 입력 완료.<br>- 부품 간 조립 관계 형성 완료.<br>- G1/G2 통과, G3/G4 조건부 통과. | **시험 출력 권장**<br>(Test Print Only) | "핵심 치수가 보정되었습니다. 간이 치수 확인용 시험 출력이 가능합니다." |
-| **Tier 3** | **`Print Ready`** | - 기계공학적 인벌류트 파라메트릭 솔리드 생성.<br>- **G1~G4 제조 검증 게이트 100% Pass**.<br>- 하드웨어 BOM 및 단계별 조립 가이드 패키징 완료. | **실물 출력 보장**<br>(100% Print Ready) | "0.4mm 노즐 FDM 프린터에서 출력 후 즉시 조립 및 구동할 수 있습니다. 3MF/BOM 다운로드 가능." |
+1. 최대 오버행 기준: 45° baseline
+2. 하단 elephant-foot 완화를 위한 chamfer 사용
+3. 최소 feature/벽 두께 기준 적용
+4. build volume 초과 방지
+5. 출력 방향과 support 필요성 평가
 
----
+수평 홀 teardrop, bridge limit 등의 고급 규칙은 실제 generator가 해당 형상을 생성하고 evaluator가 검증할 때만 `지원됨`으로 표시한다.
 
-## 6. 제조 검증 게이트 (Manufacturability Validation Gates)
+## 5. Readiness Tier
 
-```
+| Tier | 의미 | 허용되는 주장 |
+| --- | --- | --- |
+| `Concept` | 사진/아이디어 기반 추정, 핵심 치수 미확정 | 교육용 시각화/개념 모델 |
+| `Prototype` | 주요 치수/관계가 정의되고 일부 검증 통과 | 시험 출력 후보 |
+| `Print Ready` (legacy name) | G1~G4 계산 검증 통과 | **Computationally Prevalidated**. 실제 성공 보장 아님 |
+
+실제 출력·조립·구동을 확인하면 별도 evidence metadata에 E3 이상을 기록한다. enum 이름 변경은 API 호환성을 고려해 별도 migration 작업으로 다룬다.
+
+## 6. 제조 검증 게이트
+
+```text
 [CAD Solid / Assembly]
        │
        ▼
- [Gate G1: Geometry Integrity]
-       ├─ Watertight (비다양체 에지 = 0)
-       ├─ Positive Volume (체적 > 0)
-       └─ Normal Orientation (법선 일관성)
-       │ (Pass)
+ G1 Geometry Integrity
+       │
        ▼
- [Gate G2: Printer Constraints]
-       ├─ Min Wall Thickness (>= 1.2mm)
-       ├─ Overhang Ratio (45도 초과 면적 < 5%)
-       └─ Build Volume Check (<= 180x180x180mm)
-       │ (Pass)
+ G2 Printer Constraints
+       │
        ▼
- [Gate G3: Assembly & Interference]
-       ├─ Part-to-Part Collision Volume = 0
-       ├─ Center Distance a = m*(z1+z2)/2 정확도
-       └─ Shaft-Hole Fit Clearance >= 0.35mm
-       │ (Pass)
+ G3 Assembly / Interference
+       │
        ▼
- [Gate G4: Slicing & Layer Validation]
-       ├─ Slicing Success (레이어별 2D 슬라이스 유효)
-       ├─ Unsupported Islands = 0
-       └─ Filament Mass & Print Time 계산
-       │ (Pass)
+ G4 Slicing / Layer Validation
+       │
        ▼
-  ==> [PRINT READY CERTIFIED]
+ Computationally Prevalidated
+       │
+       ├─ physical print / fit test
+       └─ repeated calibration
 ```
+
+### G1 — Geometry Integrity
+
+검사 목표:
+
+- watertight
+- positive volume
+- winding/normal consistency
+- degenerate/disconnected geometry 탐지
+
+G1은 기하 무결성을 검증하며 기계적 강도를 검증하지 않는다.
+
+### G2 — Printer Constraints
+
+검사 목표:
+
+- build volume
+- overhang proxy
+- bed contact
+- wall-thickness 조건
+
+**현재 구현 주의:** 기존 validator의 wall-thickness 검사는 local wall thickness의 정밀 측정이 아니라 bounding extent 기반 proxy를 포함한다. Phase 16A에서 결과에 heuristic임을 명시하고 향후 ray/thickness field 기반 검사로 교체한다.
+
+### G3 — Assembly & Interference
+
+검사 목표:
+
+- 부품 간 충돌/간섭
+- gear center distance
+- shaft/bore clearance
+
+**현재 구현 주의:** 기존 collision 검사는 AABB와 제한된 interior sample을 사용하는 approximate check다. 미세 tooth interference 또는 복잡한 접촉을 완전 증명하지 않는다. exact mesh boolean / signed-distance 기반 검사는 후속 개선 대상으로 둔다.
+
+### G4 — Slicing & Layer Validation
+
+검사 목표:
+
+- layer section 생성 가능 여부
+- unsupported/floating island 탐지
+- 대략적인 filament/time metric
+
+실제 Cura/PrusaSlicer/Bambu Studio 등의 결과와 동일함을 주장하려면 외부 slicer 교차 검증이 필요하다.
+
+## 7. 물리적 검증 프로토콜
+
+E3 이상을 얻기 위한 최소 기록:
+
+- printer model / nozzle
+- filament material/brand 또는 material profile
+- layer height / wall / infill
+- CAD revision / seed / grammar version
+- 실측 shaft/hole/center-distance 치수
+- 조립 성공 여부
+- 손 회전/구동 여부와 실패 위치
+- 사진 또는 측정 기록
+
+E4를 주장하려면 서로 다른 출력 또는 조건에서 반복 시험하고 허용오차 범위를 기록한다.
+
+## 8. Phase 16과의 관계
+
+이 문서의 제조 규칙은 `docs/architecture/mechanism-grammar-v0.1.md`의 C4 Manufacturing Constraints로 사용한다. Synthetic dataset에서는 G1~G4를 통과한 sample과 의도적으로 실패시킨 negative sample을 구분하여 label에 실패 이유를 기록한다.

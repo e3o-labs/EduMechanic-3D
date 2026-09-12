@@ -240,6 +240,29 @@ CREATE TABLE card_pins (
 * 태블릿(iPad/Galaxy Tab) 환경 성능 최적화 (60 FPS 유지)
 * 학교 현장 교사/학생 대상 알파 테스트 및 포트폴리오 PDF 익스포트 검증
 
-
-
 ---
+
+## 8. 제조 가능성 및 실물 3D 프린팅 표준 (Manufacturing & Print Ready Specification)
+
+### 8.1 EduMechanic Classroom FDM Profile v1
+* **표준 노즐 / 레이어**: 0.40mm 노즐, 0.20mm 레이어 높이, 소재 PLA
+* **기본 벽 두께**: 일반 벽 최소 1.20mm (3외벽), 하중 지지/치형 벽 1.60~2.00mm
+* **인필**: 25% Gyroid / Grid
+
+### 8.2 결합 공차 체계 (Fit Profiles)
+* **Press Fit (억지 끼워맞춤)**: +0.10 ~ +0.14mm (베어링/고정축 압입)
+* **Snug Fit (중간 끼워맞춤)**: +0.18 ~ +0.22mm (M3 너트 포켓, 탈착 핀)
+* **Sliding Fit (미끄럼 끼워맞춤)**: +0.28 ~ +0.32mm (가이드 레일, 슬라이더)
+* **Rotating Fit (회전 틈새 끼워맞춤)**: +0.35 ~ +0.42mm (수지 회전축)
+* **Gear Backlash (치면 백래시)**: 최소 0.25 ~ 0.30mm
+
+### 8.3 모델 신뢰도 3단계 등급 (Print Readiness Tiers)
+1. **Concept**: 사진 1장/아이디어 기반. 시각화 전용, 출력 미보장.
+2. **Prototype**: 기준 치수/다각도 정보 반영. 치수 확인용 간이 시험 출력 가능.
+3. **Print Ready**: 파라메트릭 CAD 솔리드 확정 + G1~G4 제조 검증 게이트 100% 통과 + BOM 패키지 완료. 실제 출력·조립·구동 보장.
+
+### 8.4 4단계 제조 검증 파이프라인 (G1 ~ G4)
+* **G1 Geometry**: Watertight, 2-Manifold, Positive Volume, No Degenerate Faces
+* **G2 Printer**: Minimum Wall, Support-Free Overhang (<=45°), Build Volume Bounds (<=180mm³)
+* **G3 Assembly**: Collision Volume = 0, Fit Clearance Verification, Gear Center Distance
+* **G4 Slicing**: Layer Generation, 0 Unsupported Islands, Filament Mass (g) & Print Time Calculation

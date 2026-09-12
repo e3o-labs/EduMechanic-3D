@@ -1,70 +1,183 @@
 """
-CadQuery to GLB / STEP 3D Asset Exporter & Self-Healing Engine for EduMechanic 3D
+CadQuery & Parametric 3D Solid Converter for EduMechanic 3D
+Generates real Watertight STEP, STL, and GLB assets from parametric mechanical components.
 """
+import os
 import sys
+from pathlib import Path
+from typing import Dict, Any, Optional
 import trimesh
-from typing import Dict, Any
-from app.schemas.spec import ComponentSpec
+
+from app.schemas.spec import ComponentSpec, PrinterProfile
+from app.services.cad.components.gears.spur_gear import InvoluteSpurGear
+from app.services.cad.components.housings.gearbox_frame import GearboxFrame
+from app.services.cad.components.crank.hand_crank import HandCrank
+from app.services.cad.components.shafts.shaft import PrecisionShaft
+from app.services.cad.components.fasteners.bushing import FlangedBushing
+
+# Directory for static exported 3D model files
+STATIC_MODELS_DIR = Path(__file__).resolve().parents[3] / "static" / "models"
+STATIC_MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
 class CadQuery3DConverter:
-    def __init__(self, tolerance: float = 0.20):
-        self.tolerance = tolerance
+    def __init__(self, profile: Optional[PrinterProfile] = None):
+        self.profile = profile or PrinterProfile()
 
-    def generate_and_convert(self, component: ComponentSpec) -> Dict[str, Any]:
+    def generate_and_convert(
+        self,
+        component: ComponentSpec,
+        output_dir: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
-        Executes CadQuery script, exports STEP/STL, and converts to GLB binary asset.
+        Executes genuine parametric geometry generator, creates watertight mesh and CAD solid,
+        and saves real STEP, STL, and GLB files.
         """
-        od = component.parameters.outer_diameter or 30.0
-        h = component.parameters.height or 15.0
+        target_dir = Path(output_dir) if output_dir else STATIC_MODELS_DIR
+        target_dir.mkdir(parents=True, exist_ok=True)
 
-        # Self-Healing Retry Loop
-        max_retries = 3
-        last_error = None
-        
-        for attempt in range(1, max_retries + 1):
+        part_id = component.part_id
+        geo_type = component.geometry_type
+        params = component.parameters
+        features = component.features
+
+        # Resolve tolerances from printer profile
+        fit_type = params.fit_type or "rotating_fit"
+        fit_clearance = getattr(self.profile.fit_profiles, fit_type, 0.38)
+        backlash = params.backlash or self.profile.fit_profiles.backlash
+
+        mesh = None
+        solid = None
+        script_code = ""
+
+        # Dispatch to mechanical component library
+        if geo_type in ["spur_gear", "involute_gear", "bevel_gear"]:
+            m = params.module or 1.5
+            z = params.teeth_count or 20
+            h = params.height or 10.0
+            bore = params.bore_diameter or 5.0
+            is_d = any(f.type == "center_shaft" and f.is_d_cut for f in features)
+
+            gear = InvoluteSpurGear(
+                module=m,
+                teeth_count=z,
+                face_width=h,
+                bore_diameter=bore,
+                backlash=backlash,
+                fit_clearance=fit_clearance,
+                is_d_cut=is_d
+            )
+            mesh = gear.to_trimesh()
             try:
-                # Generate CadQuery script
-                script = self._build_script(component, od, h)
-                
-                # Render 3D mesh representation (using trimesh primitives for WebGL export)
-                mesh = trimesh.creation.cylinder(radius=od / 2, height=h)
-                
-                return {
-                    "status": "success",
-                    "part_id": component.part_id,
-                    "attempt": attempt,
-                    "applied_tolerance": self.tolerance,
-                    "script": script,
-                    "mesh_faces": len(mesh.faces),
-                    "mesh_vertices": len(mesh.vertices),
-                    "glb_url": f"/static/models/{component.part_id}.glb",
-                    "step_url": f"/static/models/{component.part_id}.step"
-                }
-            except Exception as e:
-                last_error = str(e)
-                print(f"⚠️ [Self-Healing] CadQuery Attempt {attempt} failed: {e}. Adjusting tolerances...")
-                od += 0.1  # Self-healing parameter adjustment
+                solid = gear.to_cadquery_solid()
+            except Exception:
+                solid = None
+
+            cots_name = "608ZZ"
+            script_code = f"# Involute Spur Gear (m={m}, z={z}, backlash={backlash}mm, bore={bore}mm, COTS: 608ZZ Bearing Bore)\n# DFAM: chamfer(0.8) applied on bottom bed face for elephant foot prevention\n"
+
+        elif geo_type in ["gearbox_frame", "housing", "frame"]:
+            cd = params.outer_diameter or 36.0 # center distance
+            shaft_d = params.bore_diameter or 5.0
+            thick = params.height or 6.0
+            frame = GearboxFrame(
+                center_distance=cd,
+                shaft_diameter=shaft_d,
+                thickness=thick,
+                press_fit_clearance=self.profile.fit_profiles.press_fit,
+                rotating_fit_clearance=self.profile.fit_profiles.rotating_fit
+            )
+            mesh = frame.to_trimesh()
+            try:
+                solid = frame.to_cadquery_solid()
+            except Exception:
+                solid = None
+            script_code = f"# Gearbox Frame (Center Distance={cd}mm, Thickness={thick}mm)\n"
+
+        elif geo_type in ["hand_crank", "crank", "lever"]:
+            arm_l = params.outer_diameter or 38.0
+            shaft_d = params.bore_diameter or 5.0
+            arm_t = params.height or 5.0
+            crank = HandCrank(
+                arm_length=arm_l,
+                shaft_dia=shaft_d,
+                arm_thickness=arm_t,
+                fit_clearance=self.profile.fit_profiles.snug_fit
+            )
+            mesh = crank.to_trimesh()
+            try:
+                solid = crank.to_cadquery_solid()
+            except Exception:
+                solid = None
+            script_code = f"# Hand Crank (Arm={arm_l}mm, Bore={shaft_d}mm)\n"
+
+        elif geo_type in ["shaft", "rod"]:
+            d = params.outer_diameter or 5.0
+            l = params.height or 45.0
+            shaft = PrecisionShaft(diameter=d, length=l, is_d_cut=True)
+            mesh = shaft.to_trimesh()
+            try:
+                solid = shaft.to_cadquery_solid()
+            except Exception:
+                solid = None
+            script_code = f"# Precision Shaft (Dia={d}mm, Length={l}mm)\n"
+
+        elif geo_type in ["bushing", "spacer"]:
+            d_in = params.bore_diameter or 5.0
+            d_out = params.outer_diameter or 8.0
+            bushing = FlangedBushing(inner_diameter=d_in, outer_diameter=d_out, sleeve_length=params.height or 6.0)
+            mesh = bushing.to_trimesh()
+            try:
+                solid = bushing.to_cadquery_solid()
+            except Exception:
+                solid = None
+            script_code = f"# Flanged Bushing (ID={d_in}mm, OD={d_out}mm)\n"
+
+        else:
+            # Fallback for generic cylinder with feature cuts
+            od = params.outer_diameter or 25.0
+            h = params.height or 12.0
+            r_bore = (params.bore_diameter or 5.0) / 2.0 + fit_clearance / 2.0
+            poly = trimesh.creation.cylinder(radius=od/2.0, height=h)
+            bore_cyl = trimesh.creation.cylinder(radius=r_bore, height=h + 2.0)
+            mesh = poly.difference(bore_cyl)
+            mesh.fix_normals()
+            script_code = f"# General Cylinder Body (OD={od}mm, H={h}mm)\n"
+
+        # Save actual physical files to target directory
+        stl_path = target_dir / f"{part_id}.stl"
+        step_path = target_dir / f"{part_id}.step"
+        glb_path = target_dir / f"{part_id}.glb"
+
+        mesh.export(str(stl_path), file_type="stl")
+        mesh.export(str(glb_path), file_type="glb")
+
+        # Export STEP if CadQuery solid is available
+        step_exported = False
+        if solid is not None:
+            try:
+                import cadquery as cq
+                cq.exporters.export(solid, str(step_path))
+                step_exported = True
+            except Exception:
+                step_exported = False
 
         return {
-            "status": "error",
-            "part_id": component.part_id,
-            "error": last_error
+            "status": "success",
+            "part_id": part_id,
+            "geometry_type": geo_type,
+            "is_watertight": bool(mesh.is_watertight),
+            "volume_mm3": round(float(mesh.volume), 2) if mesh.is_watertight else 0.0,
+            "faces_count": len(mesh.faces),
+            "vertices_count": len(mesh.vertices),
+            "extents_mm": [round(float(x), 2) for x in mesh.extents],
+            "stl_file": str(stl_path),
+            "glb_file": str(glb_path),
+            "step_file": str(step_path) if step_exported else None,
+            "stl_url": f"/static/models/{part_id}.stl",
+            "glb_url": f"/static/models/{part_id}.glb",
+            "step_url": f"/static/models/{part_id}.step" if step_exported else None,
+            "cad_script": script_code,
+            "mesh_object": mesh
         }
 
-    def _build_script(self, comp: ComponentSpec, od: float, h: float) -> str:
-        script = f"""import cadquery as cq
-
-model = cq.Workplane("XY").circle({od / 2}).extrude({h})
-"""
-        for feat in comp.features:
-            if feat.type == "center_shaft":
-                dia = (feat.diameter or 6.0) + self.tolerance
-                depth = feat.depth or h
-                script += f"model = model.faces('>Z').workplane().circle({dia / 2}).cutBlind(-{depth})\n"
-            elif feat.type == "bolt_pattern":
-                pcd = feat.pitch_circle_diameter or (od * 0.7)
-                count = feat.count or 4
-                script += f"model = model.faces('>Z').workplane().polarArray(radius={pcd / 2}, startAngle=0, angle=360, count={count}).hole(3.2)\n"
-
-        script += "model = model.edges('<Z').chamfer(0.8)\n"
-        return script
+cad_converter = CadQuery3DConverter()

@@ -32,12 +32,13 @@
 | **Phase 3** | **Real-Time Co-Create & Fork/Remix** | 모둠 실시간 3D Yjs 동기화, 탐구 카드 Fork/리믹스 생태계, 파스텔 Claymorphism UI | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase3_cocreate_fork_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase3_cocreate_fork_construction.md) |
 | **Phase 4** | **Field Validation & Performance** | 태블릿 WebGL 60 FPS 최적화, 교실 현장 알파 테스트, 3D 수행평가 배지 리포트 PDF | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase4_field_validation_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase4_field_validation_construction.md) |
 | **Phase 5** | **Cloud Deployment & LMS Integration** | Docker Compose 프로덕션 인프라, Vercel 명세, Google Classroom LMS API 연동 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase5_cloud_lms_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase5_cloud_lms_construction.md) |
-| **Phase 6** | **WebXR AR Mode & 3D Printer Slicer** | WebXR 책상 증강현실 모드, Bambu/Cura 3D 프린터 3MF/STL 내보내기 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase6_ar_slicer_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase6_ar_slicer_construction.md) |
+| **Phase 6** | **WebXR AR Mode & Slicer Prototype Export** | WebXR 책상 증강현실 모드, 초기 3MF/STL 내보내기 프로토타입 구현 (실물 공차 미검증) | **🟡 프로토타입** | 2026-08-06 | [`2026-08-06_phase6_ar_slicer_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase6_ar_slicer_construction.md) |
 | **Phase 7** | **Voice Tutor Mechamong & 3D Interaction** | AI 음성 하브루타 튜터 '메카몽' STT/TTS 및 3D 음성 연동 인터랙션 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase7_voice_tutor_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase7_voice_tutor_construction.md) |
 | **Phase 8** | **Draco 3D Mesh Compression & Security Audit** | Draco 3D 메쉬 70% 압축, OWASP 보안 감사 및 Rate-Limiting 미들웨어 수립 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase8_draco_security_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase8_draco_security_construction.md) |
 | **Phase 9** | **Global Multilingual i18n Support** | 뷰포트 HUD, 분해도, 퀴즈 및 Pydantic 명세 다국어(한국어/영어/일본어) 연동 | **✅ 완료** | 2026-08-06 | [`2026-08-06_phase9_i18n_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-06_phase9_i18n_construction.md) |
 | **Phase 10** | **Teacher Analytics Dashboard & Auto-Grading** | 교사 전용 학업 성취도 관제 및 3D 수행평가 생기부 세특 자동 추천 시스템 | **✅ 완료** | 2026-08-13 | [`2026-08-13_phase10_teacher_analytics_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-13_phase10_teacher_analytics_construction.md) |
-| **Phase 11** | **Snap-to-Print Full-Cycle Makers Pipeline** | VLM 사진 원리 추론 ➔ AI 대화형 파라메트릭 학습 ➔ DFAM 3D 프린팅 검증 & 실물 출력 패키징 | **✅ 완료** | 2026-08-30 | [`2026-08-30_phase11_snap_to_print_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-30_phase11_snap_to_print_construction.md) |
+| **Phase 11** | **Snap-to-Print Full-Cycle Makers Pipeline** | VLM 사진 원리 추론 ➔ AI 대화형 파라메트릭 학습 ➔ DFAM 3D 프린팅 프로토타입 패키징 | **✅ 완료** | 2026-08-30 | [`2026-08-30_phase11_snap_to_print_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-30_phase11_snap_to_print_construction.md) |
+| **Phase 13** | **Manufacturing Validation & Print Ready Pipeline (P0)** | 인벌류트 기계 부품 라이브러리, 결합 공차 체계, G1~G4 제조 검증 게이트, 레퍼런스 감속기 실물 출력·조립·구동 보장 | **🚀 진행 중** | 2026-09-05 | [`docs/manufacturing/print-ready-spec.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/manufacturing/print-ready-spec.md) |
 
 ---
 
@@ -174,5 +175,24 @@
   - [x] Bambu Studio / OrcaSlicer / Cura 호환 멀티 플레이트 3MF 컨테이너 패키징
   - [x] 학교 메이커스페이스 3D 프린터 원격 전송(OctoPrint / Moonraker API) 규격 연동
 - 🔗 **상세 완료 이력 보기:** [`docs/history/walkthroughs/2026-08-30_phase11_snap_to_print_construction.md`](file:///Users/Agent/ps-workspace/EduMechanic-3D/docs/history/walkthroughs/2026-08-30_phase11_snap_to_print_construction.md)
+
+---
+
+### Phase 13: Manufacturing Validation & Print Ready Pipeline (P0) - 🚀 진행 중 (2026-09-05)
+- [x] **13.1 엔지니어링 제조 기준선 및 공차 체계 수립**
+  - [x] `docs/manufacturing/print-ready-spec.md` (EduMechanic Classroom FDM Profile v1: PLA, 0.4mm 노즐, 0.2mm 레이어)
+  - [x] `PrinterProfile` 스키마 및 용도별 결합 공차(Press Fit, Snug Fit, Sliding Fit, Rotating Fit, Backlash) 체계 정의
+  - [x] 모델 신뢰도 3등급 체계 (`Concept` ➔ `Prototype` ➔ `Print Ready`) 도입
+- [ ] **13.2 기계공학적 파라메트릭 컴포넌트 라이브러리 (`cad/components/`)**
+  - [ ] 순수 인벌류트(Involute) 치형 생성기 (`gears/spur_gear.py`, 백래시 보정, 축 보어, D-cut)
+  - [ ] 2단 감속 중심거리 자동 정렬 프레임 (`housings/gearbox_frame.py`)
+  - [ ] 수동 회전 핸드 크랭크 (`crank/hand_crank.py`) 및 샤프트/부싱 모듈
+- [ ] **13.3 4단계 자동 제조 검증 파이프라인 (Manufacturability Validator: G1~G4)**
+  - [ ] **Gate G1 (Geometry)**: Watertight, 2-Manifold, Positive Volume, Normal Orientation 검증
+  - [ ] **Gate G2 (Printer Constraints)**: Min Wall Thickness (>=1.2mm), Max Overhang (<=45°), Bed Contact, Build Volume
+  - [ ] **Gate G3 (Assembly & Interference)**: 조립체 3D 불리언 간섭 체적(0 mm³), 축-구멍 틈새(>=0.35mm), 중심거리 일치
+  - [ ] **Gate G4 (Slicing Validation)**: 레이어별 단면 슬라이싱, 고립 아일랜드(0개) 검출, 출력 시간 및 필라멘트 질량(g) 정밀 산출
+- [ ] **13.4 실물 제조 패키징 (STEP + STL + 3MF + BOM) & 레퍼런스 감속기 End-to-End 검증**
+  - [ ] 2 Spur Gear Reduction ($z_1=16, z_2=32$) + 샤프트 + 프레임 + 크랭크 실물 출력·조립·구동 보장 테스트 통과
 
 

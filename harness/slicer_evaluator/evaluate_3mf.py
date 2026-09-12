@@ -1,5 +1,6 @@
 """
-Harness Suite: 3MF / Multi-Mechanism Verification (Conical Ring + Music Box + Backlash)
+Harness Suite: 3MF / Manufacturing Slicer Package Verification
+Validates genuine multi-part STL geometries, 3MF container, Hardware BOM, and Print Ready manifest.
 """
 import sys
 import os
@@ -18,40 +19,47 @@ def inspect_stl_triangles(stl_bytes: bytes) -> int:
     return struct.unpack("<I", stl_bytes[80:84])[0]
 
 def run_slicer_harness_tests():
-    print("🚀 [Harness: Slicer Evaluator] Starting 3MF Conical Ring & Toleranced Solid verification...")
+    print("🚀 [Harness: Slicer Evaluator] Starting genuine Manufacturing 3MF & STL verification...")
     
-    # 1. Sharpener Planetary Pack with 18-deg Conical Ring Gear
-    sh_pkg = slicer_exporter.generate_3mf_package("sharpener")
-    with zipfile.ZipFile(io.BytesIO(sh_pkg), "r") as zf:
+    # 1. Full 2-Stage Spur Gearbox Package
+    pkg = slicer_exporter.generate_3mf_package("gearbox_p0", micro_print=False, teeth_count=32)
+    with zipfile.ZipFile(io.BytesIO(pkg), "r") as zf:
         files = zf.namelist()
-        print(f"  ✓ Sharpener 3MF Files: {files}")
-        assert "meshes/sharpener_conical_ring_gear_18deg_z24.stl" in files
-        assert "meshes/sharpener_pinion_gear_z8.stl" in files
-        assert "meshes/sharpener_helical_cutter_flute10.stl" in files
+        print(f"  ✓ Manufacturing Package Files: {files}")
+        assert "meshes/gearbox_p0_driver_gear_z16.stl" in files
+        assert "meshes/gearbox_p0_driven_gear_z32.stl" in files
+        assert "meshes/gearbox_p0_gearbox_frame.stl" in files
+        assert "meshes/gearbox_p0_hand_crank.stl" in files
+        assert "manufacturing_manifest.json" in files
+        assert "hardware_bom.json" in files
+        assert "assembly_guide.md" in files
 
-        ring_tri = inspect_stl_triangles(zf.read("meshes/sharpener_conical_ring_gear_18deg_z24.stl"))
-        cutter_tri = inspect_stl_triangles(zf.read("meshes/sharpener_helical_cutter_flute10.stl"))
-        print(f"  ✓ Conical Ring Gear Triangles: {ring_tri}, Helical Cutter Triangles: {cutter_tri}")
-        assert ring_tri > 1000, f"Conical ring must be high precision (>1000), got {ring_tri}"
-        assert cutter_tri > 800
+        # Triangle count checks
+        gear_tri = inspect_stl_triangles(zf.read("meshes/gearbox_p0_driver_gear_z16.stl"))
+        driven_tri = inspect_stl_triangles(zf.read("meshes/gearbox_p0_driven_gear_z32.stl"))
+        frame_tri = inspect_stl_triangles(zf.read("meshes/gearbox_p0_gearbox_frame.stl"))
+        print(f"  ✓ Driver Gear Triangles: {gear_tri}, Driven Gear Triangles: {driven_tri}, Frame Triangles: {frame_tri}")
+        assert gear_tri > 800, f"Driver gear must have precision teeth (>800), got {gear_tri}"
+        assert driven_tri > 1000, f"Driven gear must have precision teeth (>1000), got {driven_tri}"
+        assert frame_tri > 200
 
-        manifest = json.loads(zf.read("slicer_manifest.json").decode("utf-8"))
-        assert manifest["engineering_tolerances"]["applied_backlash_mm"] == 0.20
-        assert manifest["engineering_tolerances"]["conical_cone_angle_deg"] == 18.0
+        # Manifest verification
+        manifest = json.loads(zf.read("manufacturing_manifest.json").decode("utf-8"))
+        assert manifest["readiness_tier"] == "Print Ready"
+        assert manifest["printer_profile"]["applied_backlash_mm"] == 0.25
+        assert manifest["kinematics"]["gear_ratio"] == 2.0
+        assert manifest["kinematics"]["center_distance_mm"] == 36.0
+        assert manifest["gate_results"]["G1_geometry"] is True
+        assert manifest["gate_results"]["G2_printer"] is True
+        assert manifest["gate_results"]["G3_assembly"] is True
+        assert manifest["gate_results"]["G4_slicing"] is True
 
-    # 2. Music Box Pin Drum & Comb Pack
-    mb_pkg = slicer_exporter.generate_3mf_package("musicbox")
-    with zipfile.ZipFile(io.BytesIO(mb_pkg), "r") as zf:
-        files = zf.namelist()
-        print(f"  ✓ Music Box 3MF Files: {files}")
-        assert "meshes/musicbox_melody_pin_drum.stl" in files
-        assert "meshes/musicbox_tuned_comb_reeds.stl" in files
-        assert "meshes/musicbox_drive_spur_gear_z28.stl" in files
+        # Hardware BOM verification
+        bom = json.loads(zf.read("hardware_bom.json").decode("utf-8"))
+        assert any(item["name"] == "스테인리스 회전축 (Stainless Shaft)" for item in bom)
+        assert any("625ZZ" in item["spec"] for item in bom)
 
-        manifest = json.loads(zf.read("slicer_manifest.json").decode("utf-8"))
-        assert manifest["engineering_tolerances"]["applied_backlash_mm"] == 0.20
-
-    print("🎉 [Harness: Slicer Evaluator] ALL 3MF CONICAL & TOLERANCED STL TESTS PASSED!\n")
+    print("🎉 [Harness: Slicer Evaluator] ALL GENUINE MANUFACTURING 3MF & STL TESTS PASSED!\n")
 
 if __name__ == "__main__":
     run_slicer_harness_tests()

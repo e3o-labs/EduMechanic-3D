@@ -59,10 +59,17 @@ async def export_card_pdf(card_id: str):
 from app.services.cad.dfam import dfam_engine
 import trimesh
 
+from app.services.cad.validator import manufacturability_validator
+from app.services.cad.components.gears.spur_gear import InvoluteSpurGear, create_mating_gear_pair
+from app.services.cad.components.housings.gearbox_frame import GearboxFrame
+from app.services.cad.components.crank.hand_crank import HandCrank
+from app.schemas.spec import PrinterProfile
+
 class DFAMCheckRequest(BaseModel):
     card_id: str
     tolerance_preset: str = "standard_prusa"
     cots_mount: str = "608zz"
+    teeth_count: int = 20
 
 class SlicerExportRequest(BaseModel):
     card_id: str
@@ -74,39 +81,83 @@ class SlicerExportRequest(BaseModel):
 @router.post("/cards/{card_id}/dfam-check")
 async def check_dfam_printability(card_id: str, req: Optional[DFAMCheckRequest] = None):
     """
-    DFAM (Design for Additive Manufacturing) Printability Check Endpoint
+    DFAM & Manufacturability Validation Endpoint:
+    Runs full G1~G4 validation gates on true mechanical components and returns Print Readiness tier.
     """
-    mesh = trimesh.creation.cylinder(radius=20.0, height=15.0)
-    analysis = dfam_engine.analyze_mesh_printability(mesh)
-    tolerance = dfam_engine.get_tolerance(req.tolerance_preset if req else "standard_prusa")
+    teeth = req.teeth_count if req and req.teeth_count else 20
+    preset = req.tolerance_preset if req else "standard_prusa"
+
+    # Profile selection
+    profile = PrinterProfile()
+    if preset == "precise_bambu":
+        profile.fit_profiles.rotating_fit = 0.30
+        profile.fit_profiles.backlash = 0.20
+    elif preset == "school_ender":
+        profile.fit_profiles.rotating_fit = 0.42
+        profile.fit_profiles.backlash = 0.30
+
+    manufacturability_validator.profile = profile
+
+    # Generate physical gear pair & frame for the card
+    g1, g2, center_dist = create_mating_gear_pair(
+        module=1.5,
+        teeth_1=16,
+        teeth_2=teeth if teeth >= 16 else 32,
+        shaft_dia=5.0
+    )
+    frame = GearboxFrame(center_distance=center_dist, shaft_diameter=5.0)
+    crank = HandCrank(shaft_dia=5.0)
+
+    parts_map = {
+        "driver_gear": g1.to_trimesh(),
+        "driven_gear": g2.to_trimesh(),
+        "gearbox_frame": frame.to_trimesh(),
+        "hand_crank": crank.to_trimesh()
+    }
+
+    report = manufacturability_validator.evaluate_print_readiness(
+        parts=parts_map,
+        assembly_relations=[
+            {"type": "gear_mesh", "actual_center_dist": center_dist, "target_center_dist": center_dist},
+            {"type": "shaft_bore_fit", "shaft_id": "shaft", "bore_id": "driver_gear", "shaft_dia": 5.0, "bore_dia": g1.actual_bore_dia, "fit_type": "rotating_fit"}
+        ]
+    )
+
     return {
         "card_id": card_id,
-        "dfam_analysis": analysis,
-        "applied_tolerance": tolerance,
-        "cots_mount": req.cots_mount if req else "608zz"
+        "print_readiness_tier": report.tier.value,
+        "overall_passed": report.overall_passed,
+        "score": report.score,
+        "summary": report.summary,
+        "gates": {
+            "G1_geometry": report.g1_geometry.model_dump() if hasattr(report.g1_geometry, "model_dump") else report.g1_geometry.dict(),
+            "G2_printer": report.g2_printer.model_dump() if hasattr(report.g2_printer, "model_dump") else report.g2_printer.dict(),
+            "G3_assembly": report.g3_assembly.model_dump() if hasattr(report.g3_assembly, "model_dump") else report.g3_assembly.dict(),
+            "G4_slicing": report.g4_slicing.model_dump() if hasattr(report.g4_slicing, "model_dump") else report.g4_slicing.dict()
+        },
+        "applied_tolerance": profile.fit_profiles.rotating_fit,
+        "recommendations": report.recommendations
     }
 
 @router.post("/cards/{card_id}/export-3mf")
 async def export_slicer_3mf(card_id: str, req: Optional[SlicerExportRequest] = None):
     """
-    Exports 3D Printable 3MF / STL Slicing Package for Bambu Studio, Cura, and PrusaSlicer.
+    Exports 3D Printable Manufacturing Package (STLs, standard 3MF, BOM, Assembly Guide).
     """
     micro = req.micro_print if req else False
     preset = req.tolerance_preset if req else "standard_prusa"
-    cots = req.cots_type if req else "608zz"
-    teeth = req.teeth_count if req else 20
-    
+    teeth = req.teeth_count if req else 32
+
     slicer_bytes = slicer_exporter.generate_3mf_package(
         card_id=card_id,
         micro_print=micro,
         tolerance_preset=preset,
-        cots_type=cots,
         teeth_count=teeth
     )
     return Response(
         content=slicer_bytes,
         media_type="application/zip",
-        headers={"Content-Disposition": f"attachment; filename=EduMechanic_3DPrint_{card_id}.3mf"}
+        headers={"Content-Disposition": f"attachment; filename=EduMechanic_Manufacturing_{card_id}.zip"}
     )
 
 

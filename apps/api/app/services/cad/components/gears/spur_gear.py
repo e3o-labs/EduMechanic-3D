@@ -1,6 +1,6 @@
 """
-Engineering-grade True Involute Spur Gear Generator for EduMechanic 3D
-Generates 100% Watertight, 3D-Printable Solids with Applied Backlash & Fit Tolerances.
+Canonical Reference Involute Spur Gear Generator for EduMechanic 3D
+Generates parametric 3D-printable solid geometry with applied backlash & fit tolerances.
 """
 import math
 from typing import List, Tuple, Dict, Any, Optional
@@ -81,8 +81,7 @@ class InvoluteSpurGear:
 
     def _generate_2d_tooth_profile(self, points_per_flank: int = 8) -> List[Tuple[float, float]]:
         """
-        Calculates mathematically true, angle-monotonic involute gear contour in 2D Cartesian plane.
-        Guarantees zero self-intersections and 100% watertight extrusion.
+        Calculates angle-monotonic involute gear contour in 2D Cartesian plane designed for watertight extrusion.
         """
         r_p = self.r_pitch
         r_b = self.r_base

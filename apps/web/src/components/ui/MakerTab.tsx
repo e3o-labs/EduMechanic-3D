@@ -33,7 +33,7 @@ export const MakerTab: React.FC = () => {
     G4_slicing: { passed: true, name: '슬라이싱 연산' }
   });
   const [validationSummary, setValidationSummary] = useState<string>(
-    'G1~G4 제조 검증 100% 통과! 0.4mm 노즐 FDM 프린터에서 실물 출력, 조립 및 기계 구동이 보장됩니다.'
+    '[Print Ready (Computationally Prevalidated)] G1~G4 컴퓨터 계산 사전 검증 통과 (기하·프린터 범위·샘플링 간섭·슬라이스 단면 기준). 실물 출력 및 조립 적합성은 물리 테스트가 필요합니다.'
   );
   const [isValidating, setIsValidating] = useState(false);
 

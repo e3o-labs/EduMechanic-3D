@@ -43,7 +43,7 @@ def run_dfam_harness_tests():
     assert "chamfer(0.8)" in result["cadquery_code"], "DFAM Chamfer must be injected"
     assert "608ZZ" in result["cadquery_code"], "608ZZ COTS mounting pocket must be present"
 
-    print("🎉 [Harness: DFAM Evaluator] ALL TESTS PASSED SUCCESSFULLY! (100% Quality Verified)\n")
+    print("✓ [Harness: DFAM Evaluator] DFAM checks passed successfully.\n")
 
 if __name__ == "__main__":
     run_dfam_harness_tests()

@@ -1,6 +1,6 @@
 """
 EduMechanic-3D Parametric Mechanical Component Library
-Provides mathematically proven, 3D-printable mechanical primitives:
+Parametric 3D mechanical primitives:
 - True Involute Spur Gears
 - Precision Center-Distance Gearbox Frames
 - Hand Cranks & Levers

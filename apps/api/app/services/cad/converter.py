@@ -19,6 +19,10 @@ from app.services.cad.components.fasteners.bushing import FlangedBushing
 STATIC_MODELS_DIR = Path(__file__).resolve().parents[3] / "static" / "models"
 STATIC_MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
+class UnsupportedGeometryError(ValueError):
+    """Raised when an unsupported geometry type is requested in CadQuery3DConverter."""
+    pass
+
 class CadQuery3DConverter:
     def __init__(self, profile: Optional[PrinterProfile] = None):
         self.profile = profile or PrinterProfile()
@@ -40,6 +44,13 @@ class CadQuery3DConverter:
         params = component.parameters
         features = component.features
 
+        # Fail-closed for unsupported geometry types per EM3D-016A correctness baseline
+        if geo_type in ["bevel_gear", "helical_gear", "worm_gear"]:
+            raise UnsupportedGeometryError(
+                f"Unsupported geometry type '{geo_type}': {geo_type} is not supported in v0.1. "
+                "Silent fallback to spur gear or generic cylinder is strictly prohibited."
+            )
+
         # Resolve tolerances from printer profile
         fit_type = params.fit_type or "rotating_fit"
         fit_clearance = getattr(self.profile.fit_profiles, fit_type, 0.38)
@@ -50,7 +61,7 @@ class CadQuery3DConverter:
         script_code = ""
 
         # Dispatch to mechanical component library
-        if geo_type in ["spur_gear", "involute_gear", "bevel_gear"]:
+        if geo_type in ["spur_gear", "involute_gear"]:
             m = params.module or 1.5
             z = params.teeth_count or 20
             h = params.height or 10.0

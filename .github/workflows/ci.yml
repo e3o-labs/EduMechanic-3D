@@ -1,0 +1,62 @@
+name: EduMechanic-3D CI
+
+on:
+  push:
+    branches: [ main, "feat/**" ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  web-verify:
+    name: Web Typecheck & Physics Unit Contract
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/web/package.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: TypeScript Typecheck
+        run: npx tsc --noEmit
+
+      - name: Web Physics Engine Unit Contract Test
+        run: npx tsx src/utils/physicsEngine.test.ts
+
+  python-verify:
+    name: Python Schema, Constraint Solver & Dynamics Harness
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pydantic fastapi trimesh shapely numpy scipy pytest anyio
+
+      - name: Physics Dynamics Harness Evaluation
+        env:
+          PYTHONPATH: apps/api
+        run: python harness/physics_evaluator/evaluate_dynamics.py
+
+      - name: Run Mechanism Grammar & Schema Constraint Tests
+        env:
+          PYTHONPATH: apps/api
+        run: pytest tests/unit/test_mechanism_grammar.py tests/unit/test_involute_gear_geometry.py tests/unit/test_manufacturability_validator.py tests/unit/test_unsupported_geometry.py

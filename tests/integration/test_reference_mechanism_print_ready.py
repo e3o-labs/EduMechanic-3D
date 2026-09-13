@@ -1,7 +1,7 @@
 """
 Integration Test: End-to-End Reference Mechanism Manufacturing Validation
 Mechanism: 2 Spur Gears (z1=16, z2=32, m=1.5, a=36.0mm) + Shafts + Housing + Hand Crank
-Proves that EduMechanic-3D generates physically printable, assembleable, and functioning models.
+Computationally prevalidates reference mechanism CAD generation, G1~G4 checks, and manufacturing packaging.
 """
 import io
 import zipfile
@@ -166,4 +166,4 @@ def test_reference_mechanism_end_to_end():
         guide = zf.read("assembly_guide.md").decode("utf-8")
         assert "조립 순서" in guide
 
-    print("🎉 [Integration Test] Reference Mechanism 100% PRINT READY & VALIDATED!\n")
+    print("✓ [Integration Test] Reference Mechanism computationally prevalidated (Print Ready tier assigned).\n")

@@ -4,7 +4,7 @@ Integrated with Parametric Mechanical Component Library, DFAM & Real Solid Verif
 """
 from typing import Dict, Any, Optional
 from app.schemas.spec import ComponentSpec, PrinterProfile
-from app.services.cad.converter import cad_converter
+from app.services.cad.converter import cad_converter, UnsupportedGeometryError
 
 def generate_parametric_component(
     comp: ComponentSpec, 
@@ -24,8 +24,27 @@ def generate_parametric_component(
     elif tolerance:
         cad_converter.profile.fit_profiles.rotating_fit = tolerance
 
-    # Generate physical solids & meshes
-    res = cad_converter.generate_and_convert(comp)
+    # Generate physical solids & meshes with fail-closed error handling
+    try:
+        res = cad_converter.generate_and_convert(comp)
+    except UnsupportedGeometryError as err:
+        return {
+            "status": "unsupported",
+            "error": str(err),
+            "part_id": comp.part_id,
+            "name": comp.name,
+            "geometry_type": comp.geometry_type,
+            "applied_tolerance": tolerance,
+            "cots_mount": cots_mount,
+            "is_watertight": False,
+            "volume_mm3": 0.0,
+            "faces_count": 0,
+            "cadquery_code": "",
+            "stl_url": None,
+            "step_url": None,
+            "gltf_url": None,
+            "extents_mm": []
+        }
 
     # Return enriched response
     return {

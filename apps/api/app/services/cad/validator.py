@@ -125,11 +125,13 @@ class ManufacturabilityValidator:
         elif overhang_ratio > 0.05:
             warnings.append(f"[{part_id}] 미세 오버행({overhang_ratio*100:.1f}%)이 감지되었습니다. 챔퍼 보강 또는 서포트 사용을 검토하세요.")
 
-        # 3. Minimum wall thickness proxy (check cross-sectional thin features)
+        # 3. Minimum wall thickness proxy (heuristic check of minimum extent across bounding axes)
         min_wall_target = self.profile.min_wall_thickness
-        # Check minimum thickness across bounding axes
-        if min(extents) < min_wall_target:
-            errors.append(f"[{part_id}] 부품 최소 두께({min(extents):.2f}mm)가 최저 허용 벽 두께({min_wall_target}mm)보다 얇습니다.")
+        min_extent = float(min(extents))
+        metrics["min_bounding_extent_mm"] = round(min_extent, 2)
+        metrics["wall_thickness_method"] = "bounding_extent_proxy"
+        if min_extent < min_wall_target:
+            errors.append(f"[{part_id}] 부품 최소 바운딩 치수({min_extent:.2f}mm, 프록시 검사)가 최저 허용 벽 두께({min_wall_target}mm)보다 얇습니다.")
 
         # 4. Bed Contact Area
         bed_faces_mask = face_centers_z <= (z_min + 0.4)
@@ -164,7 +166,11 @@ class ManufacturabilityValidator:
         """
         errors = []
         warnings = []
-        metrics = {"part_names": list(parts.keys()), "interferences": []}
+        metrics = {
+            "part_names": list(parts.keys()),
+            "interferences": [],
+            "collision_detection_method": "aabb_grid_sampled_approximate"
+        }
 
         # 1. Pairwise AABB & Vertex-Containment Interference Check
         part_keys = list(parts.keys())
@@ -192,7 +198,7 @@ class ManufacturabilityValidator:
                     if in_both > 0:
                         has_collision = True
                         overlap_vol = float(np.prod(overlap_dims))
-                        errors.append(f"[{p1} <-> {p2}] 부품 간 3D 물리적 간섭(Interference Volume: ~{overlap_vol:.2f}mm³, {in_both}/27 interior points colliding)이 발생했습니다.")
+                        errors.append(f"[{p1} <-> {p2}] 부품 간 3D 물리적 간섭(근사 격자 샘플링: 간섭 체적 ~{overlap_vol:.2f}mm³, {in_both}/27개 격자점 충돌)이 감지되었습니다.")
                         metrics["interferences"].append({"part1": p1, "part2": p2, "volume_approx": overlap_vol, "colliding_points": in_both})
                     else:
                         warnings.append(f"[{p1} <-> {p2}] 부품 경계면이 맞닿아 있습니다 (접촉면 간극 미세).")
@@ -401,7 +407,12 @@ class ManufacturabilityValidator:
         # Determine Tier
         if overall_passed:
             tier = PrintReadinessTier.PRINT_READY
-            summary = f"🎉 [Print Ready] G1~G4 제조 검증 100% 통과! 0.4mm 노즐 FDM 프린터에서 실물 출력, 조립 및 기계 구동이 보장됩니다. (총 출력시간: ~{total_time_min}분, 필라멘트: {total_filament_g:.1f}g)"
+            summary = (
+                f"[Print Ready (Computationally Prevalidated)] G1~G4 컴퓨터 계산 사전 검증 통과 "
+                f"(기하·프린터 범위·샘플링 간섭·슬라이스 단면 기준). "
+                f"실물 출력 및 조립 적합성은 프린터 캘리브레이션 및 물리 테스트가 필요합니다. "
+                f"(예상 출력시간: ~{total_time_min}분, 필라멘트: {total_filament_g:.1f}g)"
+            )
         elif g1_passed and g2_passed:
             tier = PrintReadinessTier.PROTOTYPE
             summary = "⚠️ [Prototype] 외형 및 슬라이스는 가능하나, 조립 간섭 또는 공차 보완이 권장되는 시험 출력 단계입니다."

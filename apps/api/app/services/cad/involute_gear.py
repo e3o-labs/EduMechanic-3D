@@ -1,9 +1,24 @@
 """
-Engineering Standard Involute Gear & COTS Mount Generator for EduMechanic 3D
-Generates parametric CadQuery code and solid geometry for Spur Gears, Bevel Gears, and Standard COTS Mounts (608ZZ, M3, LEGO).
+DEPRECATED: Legacy rectangular-slot gear generator.
+
+WARNING: This module generates approximate gear geometry using polar rectangular slot cuts
+(polarArray(...).rect(...)), NOT an exact mathematical involute curve.
+The canonical reference implementation for involute spur gears in EduMechanic-3D is:
+    app.services.cad.components.gears.spur_gear.InvoluteSpurGear
+
+This legacy module is retained solely for backwards compatibility with legacy tests/scripts
+and is scheduled for deprecation/removal in v0.2.
 """
 import math
+import warnings
 from typing import Dict, Any, Optional
+
+warnings.warn(
+    "app.services.cad.involute_gear is deprecated. "
+    "Use app.services.cad.components.gears.spur_gear.InvoluteSpurGear instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 class InvoluteGearGenerator:
     def __init__(self):
@@ -50,7 +65,7 @@ class InvoluteGearGenerator:
         cots_type: Optional[str] = "608zz" # "608zz", "m3_bolt", "lego_pin", "d_shaft"
     ) -> str:
         """
-        Produces clean CadQuery script constructing exact involute gear profile with DFAM chamfer & COTS mounting.
+        Produces simplified CadQuery script constructing approximate gear profile with rectangular tooth-space cuts (not exact involute) with DFAM chamfer & COTS mounting.
         """
         geom = self.calculate_gear_geometry(module, teeth_count)
         d_tip = geom["tip_diameter"]
@@ -73,7 +88,7 @@ root_rad = {d_root / 2.0}
 model = cq.Workplane("XY").circle(tip_rad).extrude(h)
 
 # Tooth profile cuts
-# Standard involute cutter pattern
+# Simplified rectangular tooth-space cutter pattern (legacy approximation, not true involute)
 tooth_angle = 360.0 / z
 tooth_width = math.pi * m / 2.0
 

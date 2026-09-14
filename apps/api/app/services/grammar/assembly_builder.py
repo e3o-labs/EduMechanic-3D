@@ -21,7 +21,7 @@ class MechanismAssemblyBuilder:
     """
     Deterministic CAD Assembly generator.
     Converts a valid MechanismGrammar into fully instantiated 3D solid geometry and watertight meshes.
-    Guarantees reproducibility given (grammar, seed).
+    Guarantees deterministic CAD assembly: same grammar input produces deterministic derived/build output.
     """
 
     def __init__(self, profile: Optional[PrinterProfile] = None):
@@ -48,27 +48,70 @@ class MechanismAssemblyBuilder:
 
         comp_map = {c.id: c for c in grammar.components}
 
-        # Identify driver and driven gears
+        # Identify driver and driven gears semantically
         mesh_rel = next(r for r in grammar.relations if r.type == "gear_mesh")
-        gear1_comp = comp_map[mesh_rel.source]
-        gear2_comp = comp_map[mesh_rel.target]
+        src_comp = comp_map[mesh_rel.source]
+        tgt_comp = comp_map[mesh_rel.target]
+
+        if src_comp.role == "driver" or tgt_comp.role == "driven":
+            driver_gear_comp = src_comp
+            driven_gear_comp = tgt_comp
+        elif tgt_comp.role == "driver" or src_comp.role == "driven":
+            driver_gear_comp = tgt_comp
+            driven_gear_comp = src_comp
+        else:
+            driver_gear_comp = src_comp
+            driven_gear_comp = tgt_comp
+
+        # Resolve driver and driven shafts from relations (independent of list order)
+        gear_to_shaft: Dict[str, str] = {}
+        for rel in grammar.relations:
+            if rel.type in {"fixed", "coaxial"}:
+                c1 = comp_map.get(rel.source)
+                c2 = comp_map.get(rel.target)
+                if c1 and c2:
+                    if c1.type == "spur_gear" and c2.type == "shaft":
+                        gear_to_shaft[c1.id] = c2.id
+                    elif c1.type == "shaft" and c2.type == "spur_gear":
+                        gear_to_shaft[c2.id] = c1.id
+
+        driver_shaft_id = gear_to_shaft.get(driver_gear_comp.id)
+        driven_shaft_id = gear_to_shaft.get(driven_gear_comp.id)
+
+        driver_shaft_comp = comp_map.get(driver_shaft_id) if driver_shaft_id else None
+        driven_shaft_comp = comp_map.get(driven_shaft_id) if driven_shaft_id else None
+
+        # Fallback to roles if needed
+        if not driver_shaft_comp:
+            driver_shaft_comp = next((c for c in grammar.components if c.type == "shaft" and c.role == "input_shaft"), None)
+        if not driven_shaft_comp:
+            driven_shaft_comp = next((c for c in grammar.components if c.type == "shaft" and c.role == "output_shaft"), None)
+
+        if not driver_shaft_comp or not driven_shaft_comp:
+            remaining_shafts = [c for c in grammar.components if c.type == "shaft"]
+            if not driver_shaft_comp and remaining_shafts:
+                driver_shaft_comp = remaining_shafts[0]
+            if not driven_shaft_comp and len(remaining_shafts) > 1:
+                driven_shaft_comp = remaining_shafts[1]
+
+        if not driver_shaft_comp or not driven_shaft_comp:
+            raise ValueError("Unable to resolve driver and driven shafts from mechanism relations or roles")
 
         # Extract parameters
-        m = extract_numeric_value(gear1_comp.parameters.get("module"), 1.5)
-        z1 = int(extract_numeric_value(gear1_comp.parameters.get("teeth_count"), 16))
-        z2 = int(extract_numeric_value(gear2_comp.parameters.get("teeth_count"), 32))
-        fw1 = extract_numeric_value(gear1_comp.parameters.get("face_width") or gear1_comp.parameters.get("height"), 10.0)
-        fw2 = extract_numeric_value(gear2_comp.parameters.get("face_width") or gear2_comp.parameters.get("height"), 10.0)
-        b1 = extract_numeric_value(gear1_comp.parameters.get("bore_diameter"), 5.0)
-        b2 = extract_numeric_value(gear2_comp.parameters.get("bore_diameter"), 5.0)
-        pa1 = extract_numeric_value(gear1_comp.parameters.get("pressure_angle_deg"), 20.0)
+        m = extract_numeric_value(driver_gear_comp.parameters.get("module"), 1.5)
+        z1 = int(extract_numeric_value(driver_gear_comp.parameters.get("teeth_count"), 16))
+        z2 = int(extract_numeric_value(driven_gear_comp.parameters.get("teeth_count"), 32))
+        fw1 = extract_numeric_value(driver_gear_comp.parameters.get("face_width") or driver_gear_comp.parameters.get("height"), 10.0)
+        fw2 = extract_numeric_value(driven_gear_comp.parameters.get("face_width") or driven_gear_comp.parameters.get("height"), 10.0)
+        b1 = extract_numeric_value(driver_gear_comp.parameters.get("bore_diameter"), 5.0)
+        b2 = extract_numeric_value(driven_gear_comp.parameters.get("bore_diameter"), 5.0)
+        pa1 = extract_numeric_value(driver_gear_comp.parameters.get("pressure_angle_deg"), 20.0)
 
-        # Shafts
-        shaft_comps = [c for c in grammar.components if c.type == "shaft"]
-        s1_dia = extract_numeric_value(shaft_comps[0].parameters.get("diameter"), 5.0)
-        s1_len = extract_numeric_value(shaft_comps[0].parameters.get("length"), 45.0)
-        s2_dia = extract_numeric_value(shaft_comps[1].parameters.get("diameter"), 5.0) if len(shaft_comps) > 1 else s1_dia
-        s2_len = extract_numeric_value(shaft_comps[1].parameters.get("length"), 45.0) if len(shaft_comps) > 1 else s1_len
+        # Shaft dimensions
+        s1_dia = extract_numeric_value(driver_shaft_comp.parameters.get("diameter"), 5.0)
+        s1_len = extract_numeric_value(driver_shaft_comp.parameters.get("length"), 45.0)
+        s2_dia = extract_numeric_value(driven_shaft_comp.parameters.get("diameter"), 5.0)
+        s2_len = extract_numeric_value(driven_shaft_comp.parameters.get("length"), 45.0)
 
         # Frame
         frame_comp = next((c for c in grammar.components if c.type == "frame"), None)
@@ -77,8 +120,8 @@ class MechanismAssemblyBuilder:
         # Crank
         crank_comp = next((c for c in grammar.components if c.type == "crank"), None)
 
-        # Bushings
-        bushing_comps = [c for c in grammar.components if c.type == "bushing"]
+        # Bushings (sorted deterministically by ID to ensure order independence)
+        bushing_comps = sorted([c for c in grammar.components if c.type == "bushing"], key=lambda c: c.id)
 
         center_dist = derived.center_distance_mm
         backlash = self.profile.fit_profiles.backlash
@@ -121,7 +164,19 @@ class MechanismAssemblyBuilder:
         bushings = []
         for b_comp in bushing_comps:
             in_dia = extract_numeric_value(b_comp.parameters.get("inner_diameter"), s1_dia)
-            bushings.append(FlangedBushing(inner_diameter=in_dia))
+            out_dia = extract_numeric_value(b_comp.parameters.get("outer_diameter"), 8.0)
+            flange_dia = extract_numeric_value(b_comp.parameters.get("flange_diameter"), 12.0)
+            sleeve_len = extract_numeric_value(b_comp.parameters.get("sleeve_length"), 6.0)
+            flange_thick = extract_numeric_value(b_comp.parameters.get("flange_thickness"), 2.0)
+            bushings.append(
+                FlangedBushing(
+                    inner_diameter=in_dia,
+                    outer_diameter=out_dia,
+                    flange_diameter=flange_dia,
+                    sleeve_length=sleeve_len,
+                    flange_thickness=flange_thick,
+                )
+            )
 
         # 2. Build Watertight Component Meshes
         m_g1 = g1.to_trimesh()
@@ -146,11 +201,11 @@ class MechanismAssemblyBuilder:
         m_g2.apply_translation([center_dist / 2.0, 0.0, 8.0])
 
         parts_map: Dict[str, trimesh.Trimesh] = {
-            gear1_comp.id: m_g1,
-            gear2_comp.id: m_g2,
+            driver_gear_comp.id: m_g1,
+            driven_gear_comp.id: m_g2,
             frame_comp.id if frame_comp else "frame": m_frame,
-            shaft_comps[0].id: m_s1,
-            shaft_comps[1].id if len(shaft_comps) > 1 else "shaft_driven": m_s2,
+            driver_shaft_comp.id: m_s1,
+            driven_shaft_comp.id: m_s2,
         }
 
         if crank and crank_comp:

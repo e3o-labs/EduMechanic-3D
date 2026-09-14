@@ -91,7 +91,19 @@ class SingleStageSpurGearboxSolver:
             return ConstraintValidationResult(is_valid=False, errors=errors, warnings=warnings)
 
         comp_map: Dict[str, ComponentNode] = {}
+        seen_comp_ids = set()
         for comp in grammar.components:
+            if comp.id in seen_comp_ids:
+                errors.append(
+                    RejectionDiagnostic(
+                        code="DUPLICATE_COMPONENT_ID",
+                        path=f"components.{comp.id}",
+                        message=f"Duplicate component ID '{comp.id}' detected in components list",
+                        severity="error",
+                        observed=comp.id,
+                    )
+                )
+            seen_comp_ids.add(comp.id)
             comp_map[comp.id] = comp
             # Check primitive type against strict whitelist
             if comp.type not in SUPPORTED_PRIMITIVES:
@@ -107,7 +119,19 @@ class SingleStageSpurGearboxSolver:
                     )
                 )
 
+        seen_rel_ids = set()
         for rel in grammar.relations:
+            if rel.id in seen_rel_ids:
+                errors.append(
+                    RejectionDiagnostic(
+                        code="DUPLICATE_RELATION_ID",
+                        path=f"relations.{rel.id}",
+                        message=f"Duplicate relation ID '{rel.id}' detected in relations list",
+                        severity="error",
+                        observed=rel.id,
+                    )
+                )
+            seen_rel_ids.add(rel.id)
             # Check relation type against strict whitelist
             if rel.type not in SUPPORTED_RELATIONS:
                 errors.append(
@@ -143,7 +167,7 @@ class SingleStageSpurGearboxSolver:
                     )
                 )
 
-        # Stop early if unsupported primitives/relations or broken references exist
+        # Stop early if duplicate IDs, unsupported primitives/relations or broken references exist
         if errors:
             return ConstraintValidationResult(is_valid=False, errors=errors, warnings=warnings)
 
@@ -153,37 +177,84 @@ class SingleStageSpurGearboxSolver:
         frames = [c for c in grammar.components if c.type == PrimitiveType.FRAME.value]
         cranks = [c for c in grammar.components if c.type == PrimitiveType.CRANK.value]
 
-        # Minimum required component check
+        # Strict component cardinality check for single-stage spur gearbox
         if len(spur_gears) < 2:
             errors.append(
                 RejectionDiagnostic(
                     code="MISSING_REQUIRED_COMPONENT",
                     path="components",
-                    message=f"Single-stage spur gearbox requires at least 2 spur gears, found {len(spur_gears)}",
+                    message=f"Single-stage spur gearbox requires exactly 2 spur gears, found {len(spur_gears)}",
                     severity="error",
                     observed=len(spur_gears),
                     expected=2,
                 )
             )
+        elif len(spur_gears) > 2:
+            errors.append(
+                RejectionDiagnostic(
+                    code="EXCESS_COMPONENT",
+                    path="components",
+                    message=f"Single-stage spur gearbox requires exactly 2 spur gears, found {len(spur_gears)}",
+                    severity="error",
+                    observed=len(spur_gears),
+                    expected=2,
+                )
+            )
+
         if len(shafts) < 2:
             errors.append(
                 RejectionDiagnostic(
                     code="MISSING_REQUIRED_COMPONENT",
                     path="components",
-                    message=f"Single-stage spur gearbox requires at least 2 shafts, found {len(shafts)}",
+                    message=f"Single-stage spur gearbox requires exactly 2 shafts, found {len(shafts)}",
                     severity="error",
                     observed=len(shafts),
                     expected=2,
                 )
             )
+        elif len(shafts) > 2:
+            errors.append(
+                RejectionDiagnostic(
+                    code="EXCESS_COMPONENT",
+                    path="components",
+                    message=f"Single-stage spur gearbox requires exactly 2 shafts, found {len(shafts)}",
+                    severity="error",
+                    observed=len(shafts),
+                    expected=2,
+                )
+            )
+
         if len(frames) < 1:
             errors.append(
                 RejectionDiagnostic(
                     code="MISSING_REQUIRED_COMPONENT",
                     path="components",
-                    message="Single-stage spur gearbox requires at least 1 frame/housing",
+                    message="Single-stage spur gearbox requires exactly 1 frame/housing",
                     severity="error",
                     observed=len(frames),
+                    expected=1,
+                )
+            )
+        elif len(frames) > 1:
+            errors.append(
+                RejectionDiagnostic(
+                    code="EXCESS_COMPONENT",
+                    path="components",
+                    message=f"Single-stage spur gearbox requires exactly 1 frame/housing, found {len(frames)}",
+                    severity="error",
+                    observed=len(frames),
+                    expected=1,
+                )
+            )
+
+        if len(cranks) > 1:
+            errors.append(
+                RejectionDiagnostic(
+                    code="EXCESS_COMPONENT",
+                    path="components",
+                    message=f"Single-stage spur gearbox allows at most 1 crank, found {len(cranks)}",
+                    severity="error",
+                    observed=len(cranks),
                     expected=1,
                 )
             )
@@ -191,7 +262,7 @@ class SingleStageSpurGearboxSolver:
         if errors:
             return ConstraintValidationResult(is_valid=False, errors=errors, warnings=warnings)
 
-        # Find mesh relation
+        # Strict relation cardinality check: exactly 1 gear_mesh relation
         mesh_relations = [r for r in grammar.relations if r.type == RelationType.GEAR_MESH.value]
         if not mesh_relations:
             errors.append(
@@ -204,12 +275,24 @@ class SingleStageSpurGearboxSolver:
                 )
             )
             return ConstraintValidationResult(is_valid=False, errors=errors, warnings=warnings)
+        elif len(mesh_relations) > 1:
+            errors.append(
+                RejectionDiagnostic(
+                    code="EXCESS_RELATION",
+                    path="relations",
+                    message=f"Single-stage spur gearbox requires exactly 1 'gear_mesh' relation, found {len(mesh_relations)}",
+                    severity="error",
+                    observed=len(mesh_relations),
+                    expected=1,
+                )
+            )
+            return ConstraintValidationResult(is_valid=False, errors=errors, warnings=warnings)
 
         mesh_rel = mesh_relations[0]
-        gear1 = comp_map.get(mesh_rel.source)
-        gear2 = comp_map.get(mesh_rel.target)
+        gear_src = comp_map.get(mesh_rel.source)
+        gear_tgt = comp_map.get(mesh_rel.target)
 
-        if not gear1 or not gear2 or gear1.type != PrimitiveType.SPUR_GEAR.value or gear2.type != PrimitiveType.SPUR_GEAR.value:
+        if not gear_src or not gear_tgt or gear_src.type != PrimitiveType.SPUR_GEAR.value or gear_tgt.type != PrimitiveType.SPUR_GEAR.value:
             errors.append(
                 RejectionDiagnostic(
                     code="INVALID_RELATION_TARGET",
@@ -219,6 +302,14 @@ class SingleStageSpurGearboxSolver:
                 )
             )
             return ConstraintValidationResult(is_valid=False, errors=errors, warnings=warnings)
+
+        # Determine driver and driven gears semantically
+        if gear_src.role == "driver" or gear_tgt.role == "driven":
+            gear1, gear2 = gear_src, gear_tgt
+        elif gear_tgt.role == "driver" or gear_src.role == "driven":
+            gear1, gear2 = gear_tgt, gear_src
+        else:
+            gear1, gear2 = gear_src, gear_tgt
 
         # -------------------------------------------------------------
         # C2. Geometric Dimensions & Positive Value Constraints
@@ -248,28 +339,55 @@ class SingleStageSpurGearboxSolver:
 
         # Extract gear parameters
         m1 = extract_numeric_value(gear1.parameters.get("module"))
-        z1 = extract_numeric_value(gear1.parameters.get("teeth_count"))
+        z1_raw = extract_numeric_value(gear1.parameters.get("teeth_count"))
         b1 = extract_numeric_value(gear1.parameters.get("bore_diameter"), default=5.0)
         pa1 = extract_numeric_value(gear1.parameters.get("pressure_angle_deg"), default=20.0)
 
         m2 = extract_numeric_value(gear2.parameters.get("module"))
-        z2 = extract_numeric_value(gear2.parameters.get("teeth_count"))
+        z2_raw = extract_numeric_value(gear2.parameters.get("teeth_count"))
         b2 = extract_numeric_value(gear2.parameters.get("bore_diameter"), default=5.0)
         pa2 = extract_numeric_value(gear2.parameters.get("pressure_angle_deg"), default=20.0)
 
-        if m1 is None or z1 is None or m2 is None or z2 is None or m1 <= 0 or z1 <= 0 or m2 <= 0 or z2 <= 0:
+        if m1 is None or m2 is None or m1 <= 0 or m2 <= 0:
             errors.append(
                 RejectionDiagnostic(
                     code="INVALID_GEAR_PARAMETERS",
                     path="components",
-                    message="Gear module and teeth_count must be valid positive numbers",
+                    message="Gear module must be a valid positive number",
                     severity="error",
                 )
             )
             return ConstraintValidationResult(is_valid=False, errors=errors, warnings=warnings)
 
-        z1 = int(z1)
-        z2 = int(z2)
+        if z1_raw is None or z1_raw <= 0 or not float(z1_raw).is_integer():
+            errors.append(
+                RejectionDiagnostic(
+                    code="INVALID_GEAR_PARAMETERS",
+                    path=f"components.{gear1.id}.parameters.teeth_count",
+                    message=f"Gear '{gear1.id}' teeth_count must be a positive integer, got {z1_raw}",
+                    severity="error",
+                    observed=z1_raw,
+                    expected="positive integer",
+                )
+            )
+
+        if z2_raw is None or z2_raw <= 0 or not float(z2_raw).is_integer():
+            errors.append(
+                RejectionDiagnostic(
+                    code="INVALID_GEAR_PARAMETERS",
+                    path=f"components.{gear2.id}.parameters.teeth_count",
+                    message=f"Gear '{gear2.id}' teeth_count must be a positive integer, got {z2_raw}",
+                    severity="error",
+                    observed=z2_raw,
+                    expected="positive integer",
+                )
+            )
+
+        if errors:
+            return ConstraintValidationResult(is_valid=False, errors=errors, warnings=warnings)
+
+        z1 = int(z1_raw)
+        z2 = int(z2_raw)
 
         # -------------------------------------------------------------
         # C3. Kinematic Compatibility & Derivations
@@ -337,7 +455,10 @@ class SingleStageSpurGearboxSolver:
             )
 
         # Mesh relation center distance check (if specified)
-        rel_cd = extract_numeric_value(mesh_rel.parameters.get("center_distance") or mesh_rel.parameters.get("actual_center_dist"))
+        rel_cd_raw = mesh_rel.parameters.get("center_distance")
+        if rel_cd_raw is None:
+            rel_cd_raw = mesh_rel.parameters.get("actual_center_dist")
+        rel_cd = extract_numeric_value(rel_cd_raw)
         if rel_cd is not None and abs(rel_cd - a_derived) > self.TOLERANCE_CENTER_DISTANCE_MM:
             errors.append(
                 RejectionDiagnostic(

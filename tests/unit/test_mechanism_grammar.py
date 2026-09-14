@@ -2,7 +2,7 @@
 Unit Tests for Mechanism Grammar v0.1 (Single-Stage Spur Gearbox)
 Tests:
 1. Valid fixture acceptance + derived parameters check + untested aspects
-2. Seed determinism & reproducibility
+2. Deterministic derived output for identical grammar input
 3. Module mismatch rejection (GEAR_MODULE_MISMATCH)
 4. Pressure angle mismatch rejection (GEAR_PRESSURE_ANGLE_MISMATCH)
 5. Center distance mismatch rejection (CENTER_DISTANCE_MISMATCH)
@@ -14,8 +14,13 @@ Tests:
 11. Non-positive dimension rejection (DIMENSION_NON_POSITIVE)
 12. Parameter provenance tagging
 13. Assembly Builder deterministic CAD generation with canonical components
+14. Strict cardinality rejections (EXCESS_COMPONENT, EXCESS_RELATION)
+15. Duplicate ID rejections (DUPLICATE_COMPONENT_ID, DUPLICATE_RELATION_ID)
+16. Input validation hardening (fractional teeth, zero center distance)
+17. Shuffled order independence (semantic assembly & derived output invariant to list order)
 """
 import copy
+import numpy as np
 import pytest
 
 from app.schemas.grammar import (
@@ -163,6 +168,7 @@ def test_valid_gearbox_grammar_accepted():
 
 
 def test_determinism_reproducibility():
+    """Validates that the same grammar input produces deterministic derived output."""
     solver = SingleStageSpurGearboxSolver()
     g1 = make_valid_gearbox_grammar()
     g2 = make_valid_gearbox_grammar()
@@ -388,3 +394,202 @@ def test_assembly_builder_generates_watertight_meshes():
     with pytest.raises(ValueError) as exc:
         builder.build(bad_grammar)
     assert "GEAR_MODULE_MISMATCH" in str(exc.value)
+
+
+def test_extra_third_gear_rejected():
+    solver = SingleStageSpurGearboxSolver()
+    grammar = make_valid_gearbox_grammar()
+    # Add a third spur gear
+    grammar.components.append(
+        ComponentNode(
+            id="gear_extra",
+            type=PrimitiveType.SPUR_GEAR.value,
+            name="Extra Spur Gear",
+            parameters={"module": 1.5, "teeth_count": 24, "face_width": 10.0, "bore_diameter": 5.0},
+        )
+    )
+
+    result = solver.validate(grammar)
+
+    assert result.is_valid is False
+    codes = [e.code for e in result.errors]
+    assert "EXCESS_COMPONENT" in codes
+    err = next(e for e in result.errors if e.code == "EXCESS_COMPONENT")
+    assert err.path == "components"
+    assert err.observed == 3
+    assert err.expected == 2
+
+
+def test_extra_third_shaft_rejected():
+    solver = SingleStageSpurGearboxSolver()
+    grammar = make_valid_gearbox_grammar()
+    # Add a third shaft
+    grammar.components.append(
+        ComponentNode(
+            id="shaft_extra",
+            type=PrimitiveType.SHAFT.value,
+            name="Extra Shaft",
+            parameters={"diameter": 5.0, "length": 45.0},
+        )
+    )
+
+    result = solver.validate(grammar)
+
+    assert result.is_valid is False
+    codes = [e.code for e in result.errors]
+    assert "EXCESS_COMPONENT" in codes
+    err = next(e for e in result.errors if e.code == "EXCESS_COMPONENT")
+    assert err.path == "components"
+    assert err.observed == 3
+    assert err.expected == 2
+
+
+def test_extra_frame_rejected():
+    solver = SingleStageSpurGearboxSolver()
+    grammar = make_valid_gearbox_grammar()
+    # Add a second frame
+    grammar.components.append(
+        ComponentNode(
+            id="frame_extra",
+            type=PrimitiveType.FRAME.value,
+            name="Extra Frame",
+            parameters={"center_distance": 36.0, "thickness": 6.0},
+        )
+    )
+
+    result = solver.validate(grammar)
+
+    assert result.is_valid is False
+    codes = [e.code for e in result.errors]
+    assert "EXCESS_COMPONENT" in codes
+    err = next(e for e in result.errors if e.code == "EXCESS_COMPONENT")
+    assert err.observed == 2
+    assert err.expected == 1
+
+
+def test_multiple_gear_mesh_rejected():
+    solver = SingleStageSpurGearboxSolver()
+    grammar = make_valid_gearbox_grammar()
+    # Add a second gear_mesh relation
+    grammar.relations.append(
+        RelationEdge(
+            id="rel_mesh_second",
+            type=RelationType.GEAR_MESH.value,
+            source="gear_driver",
+            target="gear_driven",
+            parameters={"center_distance": 36.0},
+        )
+    )
+
+    result = solver.validate(grammar)
+
+    assert result.is_valid is False
+    codes = [e.code for e in result.errors]
+    assert "EXCESS_RELATION" in codes
+    err = next(e for e in result.errors if e.code == "EXCESS_RELATION")
+    assert err.path == "relations"
+    assert err.observed == 2
+    assert err.expected == 1
+
+
+def test_duplicate_component_id_rejected():
+    solver = SingleStageSpurGearboxSolver()
+    grammar = make_valid_gearbox_grammar()
+    # Duplicate gear_driver ID on the driven gear
+    grammar.components[1].id = "gear_driver"
+
+    result = solver.validate(grammar)
+
+    assert result.is_valid is False
+    codes = [e.code for e in result.errors]
+    assert "DUPLICATE_COMPONENT_ID" in codes
+    err = next(e for e in result.errors if e.code == "DUPLICATE_COMPONENT_ID")
+    assert err.path == "components.gear_driver"
+    assert err.observed == "gear_driver"
+
+
+def test_duplicate_relation_id_rejected():
+    solver = SingleStageSpurGearboxSolver()
+    grammar = make_valid_gearbox_grammar()
+    # Duplicate relation ID
+    grammar.relations[1].id = grammar.relations[0].id
+
+    result = solver.validate(grammar)
+
+    assert result.is_valid is False
+    codes = [e.code for e in result.errors]
+    assert "DUPLICATE_RELATION_ID" in codes
+    err = next(e for e in result.errors if e.code == "DUPLICATE_RELATION_ID")
+    assert err.path == f"relations.{grammar.relations[0].id}"
+    assert err.observed == grammar.relations[0].id
+
+
+def test_fractional_tooth_count_rejected():
+    solver = SingleStageSpurGearboxSolver()
+    grammar = make_valid_gearbox_grammar()
+    # Set fractional teeth count
+    gear = next(c for c in grammar.components if c.id == "gear_driver")
+    gear.parameters["teeth_count"] = 16.5
+
+    result = solver.validate(grammar)
+
+    assert result.is_valid is False
+    codes = [e.code for e in result.errors]
+    assert "INVALID_GEAR_PARAMETERS" in codes
+    err = next(e for e in result.errors if e.code == "INVALID_GEAR_PARAMETERS")
+    assert "teeth_count" in err.path
+    assert err.observed == 16.5
+
+
+def test_zero_center_distance_rejected():
+    solver = SingleStageSpurGearboxSolver()
+    grammar = make_valid_gearbox_grammar()
+    # Explicit 0.0 center distance in mesh relation must not be treated as absent
+    mesh_rel = next(r for r in grammar.relations if r.type == RelationType.GEAR_MESH.value)
+    mesh_rel.parameters["center_distance"] = 0.0
+
+    result = solver.validate(grammar)
+
+    assert result.is_valid is False
+    codes = [e.code for e in result.errors]
+    assert "CENTER_DISTANCE_MISMATCH" in codes
+    err = next(e for e in result.errors if e.code == "CENTER_DISTANCE_MISMATCH")
+    assert err.observed == 0.0
+    assert err.expected == 36.0
+
+
+def test_shuffled_order_independence():
+    """
+    Validates that shuffling components and relations produces bit-for-bit identical
+    derived parameters and identical semantic 3D assembly placements.
+    """
+    grammar_orig = make_valid_gearbox_grammar()
+    grammar_shuffled = make_valid_gearbox_grammar()
+
+    # Invert the component order (e.g. crank first, frame, driven shaft, driver shaft, driven gear, driver gear)
+    grammar_shuffled.components = list(reversed(grammar_shuffled.components))
+    # Invert relation order
+    grammar_shuffled.relations = list(reversed(grammar_shuffled.relations))
+
+    # Solver validation check
+    solver = SingleStageSpurGearboxSolver()
+    res_orig = solver.validate(grammar_orig)
+    res_shuffled = solver.validate(grammar_shuffled)
+
+    assert res_orig.is_valid is True
+    assert res_shuffled.is_valid is True
+    assert res_orig.derived.model_dump() == res_shuffled.derived.model_dump()
+
+    # Assembly builder check
+    builder = MechanismAssemblyBuilder()
+    build_orig = builder.build(grammar_orig)
+    build_shuffled = builder.build(grammar_shuffled)
+
+    assert build_orig["derived"] == build_shuffled["derived"]
+    assert set(build_orig["parts"].keys()) == set(build_shuffled["parts"].keys())
+
+    # Every component mesh in the semantic assembly must have identical 3D bounding boxes
+    for part_name in ["gear_driver", "gear_driven", "shaft_driver", "shaft_driven", "housing_frame", "crank_input"]:
+        bounds_orig = build_orig["parts"][part_name].bounds
+        bounds_shuffled = build_shuffled["parts"][part_name].bounds
+        np.testing.assert_allclose(bounds_orig, bounds_shuffled, atol=1e-4)

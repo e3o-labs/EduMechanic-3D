@@ -9,6 +9,10 @@ dependencies = [
     "pydantic>=2.6.0",
     "cadquery>=2.4.0; sys_platform != 'win32'",
     "trimesh>=4.2.0",
+    "mapbox_earcut>=1.0.0",
+    "rtree>=1.0.0",
+    "networkx>=3.0",
+    "shapely>=2.0.0",
     "python-multipart>=0.0.9",
     "sqlalchemy>=2.0.0",
 ]

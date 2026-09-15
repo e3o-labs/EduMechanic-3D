@@ -265,6 +265,7 @@ class ManufacturabilityValidator:
         max_overhang_step = layer_h * math.tan(math.radians(self.profile.max_overhang_deg))
         step = max(1, num_layers // 50)
         
+        last_slice_error: Optional[str] = None
         for idx in range(0, num_layers, step):
             z_plane = slice_z_levels[idx]
             try:
@@ -298,7 +299,8 @@ class ManufacturabilityValidator:
 
                 prev_polygons = curr_poly
 
-            except Exception:
+            except Exception as e:
+                last_slice_error = str(e)
                 continue
 
         # Real material and print estimation metrics
@@ -322,7 +324,10 @@ class ManufacturabilityValidator:
         }
 
         if len(layer_areas) == 0:
-            errors.append(f"[{part_id}] 슬라이싱 단면 생성에 실패했습니다. 유효한 2D 폴리곤 레이어가 없습니다.")
+            err_msg = f"[{part_id}] 슬라이싱 단면 생성에 실패했습니다. 유효한 2D 폴리곤 레이어가 없습니다."
+            if last_slice_error:
+                err_msg += f" (오류 원인: {last_slice_error})"
+            errors.append(err_msg)
 
         if unsupported_island_count > 3:
             warnings.append(f"[{part_id}] 공중에 떠 있는 비지지 아일랜드(Floating islands)가 {unsupported_island_count}개 감지되었습니다. 지지대(Support) 생성이 권장됩니다.")

@@ -19,6 +19,24 @@ from app.services.cad.components.fasteners.bushing import FlangedBushing
 STATIC_MODELS_DIR = Path(__file__).resolve().parents[3] / "static" / "models"
 STATIC_MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
+# Strict Whitelist Registry of supported parametric CAD geometry types
+SUPPORTED_GEOMETRY_TYPES: Dict[str, str] = {
+    "spur_gear": "spur_gear",
+    "involute_gear": "spur_gear",
+    "gearbox_frame": "gearbox_frame",
+    "housing": "gearbox_frame",
+    "frame": "gearbox_frame",
+    "hand_crank": "hand_crank",
+    "crank": "hand_crank",
+    "lever": "hand_crank",
+    "shaft": "shaft",
+    "rod": "shaft",
+    "bushing": "bushing",
+    "spacer": "bushing",
+    "generic_cylinder": "generic_cylinder",
+    "cylinder": "generic_cylinder",
+}
+
 class UnsupportedGeometryError(ValueError):
     """Raised when an unsupported geometry type is requested in CadQuery3DConverter."""
     pass
@@ -44,11 +62,13 @@ class CadQuery3DConverter:
         params = component.parameters
         features = component.features
 
-        # Fail-closed for unsupported geometry types per EM3D-016A correctness baseline
-        if geo_type in ["bevel_gear", "helical_gear", "worm_gear"]:
+        # Strict Registry check: fail-closed for any unregistered geometry type
+        canonical_type = SUPPORTED_GEOMETRY_TYPES.get(geo_type)
+        if not canonical_type:
             raise UnsupportedGeometryError(
-                f"Unsupported geometry type '{geo_type}': {geo_type} is not supported in v0.1. "
-                "Silent fallback to spur gear or generic cylinder is strictly prohibited."
+                f"Unsupported geometry type '{geo_type}' is not supported in v0.1: not found in supported CAD registry. "
+                f"Supported types: {sorted(set(SUPPORTED_GEOMETRY_TYPES.keys()))}. "
+                "Silent fallback to generic cylinder is prohibited per EM3D-016B baseline."
             )
 
         # Resolve tolerances from printer profile
@@ -61,7 +81,7 @@ class CadQuery3DConverter:
         script_code = ""
 
         # Dispatch to mechanical component library
-        if geo_type in ["spur_gear", "involute_gear"]:
+        if canonical_type == "spur_gear":
             m = params.module or 1.5
             z = params.teeth_count or 20
             h = params.height or 10.0
@@ -86,7 +106,7 @@ class CadQuery3DConverter:
             cots_name = "608ZZ"
             script_code = f"# Involute Spur Gear (m={m}, z={z}, backlash={backlash}mm, bore={bore}mm, COTS: 608ZZ Bearing Bore)\n# DFAM: chamfer(0.8) applied on bottom bed face for elephant foot prevention\n"
 
-        elif geo_type in ["gearbox_frame", "housing", "frame"]:
+        elif canonical_type == "gearbox_frame":
             cd = params.outer_diameter or 36.0 # center distance
             shaft_d = params.bore_diameter or 5.0
             thick = params.height or 6.0
@@ -104,7 +124,7 @@ class CadQuery3DConverter:
                 solid = None
             script_code = f"# Gearbox Frame (Center Distance={cd}mm, Thickness={thick}mm)\n"
 
-        elif geo_type in ["hand_crank", "crank", "lever"]:
+        elif canonical_type == "hand_crank":
             arm_l = params.outer_diameter or 38.0
             shaft_d = params.bore_diameter or 5.0
             arm_t = params.height or 5.0
@@ -121,7 +141,7 @@ class CadQuery3DConverter:
                 solid = None
             script_code = f"# Hand Crank (Arm={arm_l}mm, Bore={shaft_d}mm)\n"
 
-        elif geo_type in ["shaft", "rod"]:
+        elif canonical_type == "shaft":
             d = params.outer_diameter or 5.0
             l = params.height or 45.0
             shaft = PrecisionShaft(diameter=d, length=l, is_d_cut=True)
@@ -132,7 +152,7 @@ class CadQuery3DConverter:
                 solid = None
             script_code = f"# Precision Shaft (Dia={d}mm, Length={l}mm)\n"
 
-        elif geo_type in ["bushing", "spacer"]:
+        elif canonical_type == "bushing":
             d_in = params.bore_diameter or 5.0
             d_out = params.outer_diameter or 8.0
             bushing = FlangedBushing(inner_diameter=d_in, outer_diameter=d_out, sleeve_length=params.height or 6.0)
@@ -143,8 +163,8 @@ class CadQuery3DConverter:
                 solid = None
             script_code = f"# Flanged Bushing (ID={d_in}mm, OD={d_out}mm)\n"
 
-        else:
-            # Fallback for generic cylinder with feature cuts
+        elif canonical_type == "generic_cylinder":
+            # Explicit generic cylinder
             od = params.outer_diameter or 25.0
             h = params.height or 12.0
             r_bore = (params.bore_diameter or 5.0) / 2.0 + fit_clearance / 2.0
@@ -153,6 +173,11 @@ class CadQuery3DConverter:
             mesh = poly.difference(bore_cyl)
             mesh.fix_normals()
             script_code = f"# General Cylinder Body (OD={od}mm, H={h}mm)\n"
+
+        else:
+            raise UnsupportedGeometryError(
+                f"Unexpected unhandled canonical type '{canonical_type}' for geometry '{geo_type}'."
+            )
 
         # Save actual physical files to target directory
         stl_path = target_dir / f"{part_id}.stl"
